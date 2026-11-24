@@ -1,8 +1,17 @@
-# Trazo Técnico 3D Studio — V12
+# Trazo Técnico 3D Studio — V13
 
 Aplicación CAD 3D conceptual para ingeniería industrial, con biblioteca de 138 componentes, trenes de compresión V9, motor B-Rep/STEP V7 y ensamblajes V8. **V10 incorpora un espacio de documentación técnica** con planos, cortes, registros de inspección e informes descargables, diseñado para escritorio y tabletas Android.
 
-## Novedades de V12
+## Novedades de V13
+
+- Pantalla de inicio con acceso directo a Biblioteca, Proyectos y Diseño.
+- Centro de proyectos: trabajos guardados de IndexedDB, apertura directa, importación JSON y tres plantillas de tren de compresión.
+- Nuevo tema grafito/cobre y actualización de colores de visor, controles, tarjetas y catálogo.
+- Liberación del contexto WebGL de las miniaturas al cambiar al editor y recuperación explícita del contexto principal.
+- Mayor detalle en geometrías procedurales de motores, compresores y cajas de engranajes (modelos conceptuales, no OEM).
+- Nuevas miniaturas a mayor resolución, con coste de GPU acotado.
+
+## Funciones heredadas de V12
 
 - Inicio simplificado con dos opciones: Biblioteca 3D y Estudio de diseño.
 - Biblioteca independiente: búsqueda, categorías, favoritos, recientes, miniaturas originales y acceso a trenes de compresión.
