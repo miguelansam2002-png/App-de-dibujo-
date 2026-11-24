@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {PREMIUM_PARTS,makePremiumModel,enrichLegacyModel} from './premium-models.js';
 
 // Biblioteca geométrica original de Trazo Técnico. Unidades en milímetros.
 // Los modelos son representaciones CAD conceptuales parametrizables, no piezas certificadas.
@@ -50,16 +51,21 @@ export const CATALOG=[
  P('tank','Tanque vertical','Equipos','◯','Carcasa y bocas',{diameter:580,height:1150}),
  P('shaft','Eje mecánico','Equipos','═','Eje macizo',{length:1200,diameter:95}),
  P('rotor','Rotor 10 discos','Equipos','≡','Eje y discos',{length:1280,shaft:80,disc:350,discs:10}),
- P('pump','Bomba centrífuga','Equipos','⬟','Voluta, bocas y bancada',{length:490,width:300,height:330})
+ P('pump','Bomba centrífuga','Equipos','⬟','Voluta, bocas y bancada',{length:490,width:300,height:330}),
+ ...PREMIUM_PARTS
 ];
-export const DIMENSION_NAMES={length:'Longitud',diameter:'Diámetro exterior',wall:'Espesor de pared',radius:'Radio al eje',branch:'Longitud ramal',branchDiameter:'Ø ramal',smallDiameter:'Ø menor',insulation:'Aislamiento',flange:'Ø brida',bore:'Diámetro interior',thickness:'Espesor',bolts:'Número de pernos',boltHole:'Ø agujero perno',pitch:'Círculo de pernos',neck:'Longitud del cuello',width:'Ancho / separación',height:'Altura',rod:'Ø varilla',head:'Ancho cabeza',depth:'Fondo',plate:'Espesor de placa',hole:'Ø agujero',holes:'Ø agujero',strap:'Ancho banda',shaft:'Ø eje',disc:'Ø disco',discs:'Número de discos'};
-export const INTEGER_DIMS=new Set(['bolts','discs']);
+export const DIMENSION_NAMES={length:'Longitud',diameter:'Diámetro exterior',wall:'Espesor de pared',radius:'Radio al eje',branch:'Longitud ramal',branchDiameter:'Ø ramal',smallDiameter:'Ø menor',insulation:'Aislamiento',flange:'Ø brida',bore:'Diámetro interior',thickness:'Espesor',bolts:'Número de pernos',boltHole:'Ø agujero perno',pitch:'Círculo de pernos',neck:'Longitud del cuello',width:'Ancho / separación',height:'Altura',rod:'Ø varilla',head:'Ancho cabeza',depth:'Fondo',plate:'Espesor de placa',hole:'Ø agujero',holes:'Ø agujero',strap:'Ancho banda',shaft:'Ø eje',disc:'Ø disco',discs:'Número de discos',lining:'Espesor revestimiento',outerWall:'Espesor camisa externa',socket:'Longitud receptáculo',segments:'Segmentos',convolutions:'Ondulaciones del fuelle'};
+export const INTEGER_DIMS=new Set(['bolts','discs','segments','convolutions']);
 export const PIPE_SIZES=[
+ {nps:'1/8',dn:6,od:10.29,s40:1.73,s80:2.41},{nps:'1/4',dn:8,od:13.72,s40:2.24,s80:3.02},{nps:'3/8',dn:10,od:17.15,s40:2.31,s80:3.20},
  {nps:'1/2',dn:15,od:21.34,s40:2.77,s80:3.73},{nps:'3/4',dn:20,od:26.67,s40:2.87,s80:3.91},{nps:'1',dn:25,od:33.4,s40:3.38,s80:4.55},
  {nps:'1 1/4',dn:32,od:42.16,s40:3.56,s80:4.85},{nps:'1 1/2',dn:40,od:48.26,s40:3.68,s80:5.08},{nps:'2',dn:50,od:60.33,s40:3.91,s80:5.54},
  {nps:'2 1/2',dn:65,od:73.03,s40:5.16,s80:7.01},{nps:'3',dn:80,od:88.9,s40:5.49,s80:7.62},{nps:'4',dn:100,od:114.3,s40:6.02,s80:8.56},
  {nps:'5',dn:125,od:141.3,s40:6.55,s80:9.53},{nps:'6',dn:150,od:168.28,s40:7.11,s80:10.97},{nps:'8',dn:200,od:219.08,s40:8.18,s80:12.7},
- {nps:'10',dn:250,od:273.05,s40:9.27,s80:15.09},{nps:'12',dn:300,od:323.85,s40:10.31,s80:17.48}
+ {nps:'10',dn:250,od:273.05,s40:9.27,s80:15.09},{nps:'12',dn:300,od:323.85,s40:10.31,s80:17.48},
+ {nps:'14',dn:350,od:355.6,s40:11.13,s80:19.05},{nps:'16',dn:400,od:406.4,s40:12.70,s80:21.44},
+ {nps:'18',dn:450,od:457.2,s40:14.27,s80:23.83},{nps:'20',dn:500,od:508,s40:15.09,s80:26.19},
+ {nps:'24',dn:600,od:609.6,s40:17.48,s80:30.96}
 ];
 export const MATERIALS=[{id:'carbon',name:'Acero carbono',color:'#8799aa'},{id:'inox',name:'Acero inoxidable',color:'#b7c5cf'},{id:'galv',name:'Galvanizado',color:'#9eabb3'},{id:'blue',name:'Azul industrial',color:'#30709d'},{id:'green',name:'Verde válvula',color:'#397e72'},{id:'safety',name:'Amarillo seguridad',color:'#d5a744'},{id:'dark',name:'Grafito',color:'#485868'},{id:'rubber',name:'Caucho',color:'#30343a'},{id:'wood',name:'Madera',color:'#bd9368'}];
 export const partDefinition=type=>CATALOG.find(p=>p.type===type);
@@ -188,8 +194,9 @@ export function makePart(data){const def=partDefinition(data.type);if(!def)throw
  case 'shaft':cyl(group,m,D/2,L,0,0,0,'x');break;
  case 'rotor':{cyl(group,M.steel,d.shaft/2,L,0,0,0,'x');const N=Math.round(d.discs);for(let i=0;i<N;i++){const x=-L*.43+i*L*.86/Math.max(1,N-1);cyl(group,m,d.disc/2,Math.max(12,L/N*.20),x,0,0,'x')}break}
  case 'pump':box(group,M.dark,L,d.height*.14,d.width,0,-d.height*.43,0);cyl(group,m,d.height*.30,L*.45,0,d.height*.06,0,'x');cyl(group,M.steel,d.height*.2,L*.10,-L*.27,d.height*.06,0,'x');cyl(group,m,d.height*.22,L*.17,L*.26,d.height*.1,0,'x');cyl(group,M.steel,d.height*.14,38,-L*.08,d.height*.43,0);break;
- default:box(group,m,L,50,50);
+ default:if(!makePremiumModel(data.type,group,d,data.color))box(group,m,L,50,50);
  }
+ enrichLegacyModel(data.type,group,d,data.color);
  group.userData.parametric=true;return group;
 }
 export function releasePart(group){group.traverse(x=>{if(x.isMesh){x.geometry?.dispose();if(Array.isArray(x.material))x.material.forEach(m=>m.dispose());else x.material?.dispose()}})}
