@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {CATALOG,PIPE_SIZES,MATERIALS,partDefinition,standardPart,makePart,releasePart} from '../src3d/parts.js';
 
 test('biblioteca extensa sin categorías ni tipos duplicados',()=>{
- assert.ok(CATALOG.length>=40,'debe incluir al menos 40 componentes');
+ assert.ok(CATALOG.length>=99,'debe incluir al menos 99 componentes');
  assert.equal(new Set(CATALOG.map(x=>x.type)).size,CATALOG.length);
  for(const c of CATALOG){assert.ok(c.category&&c.label&&c.icon);assert.ok(Object.values(c.dims).every(x=>Number.isFinite(x)&&x>0));assert.equal(partDefinition(c.type),c)}
 });
@@ -15,7 +15,7 @@ test('generación geométrica de todos los componentes y sus variaciones',()=>{
  }
 });
 test('dimensiones comerciales y acabados industriales',()=>{
- assert.ok(PIPE_SIZES.length>=12);
+ assert.ok(PIPE_SIZES.length>=22);
  for(const p of PIPE_SIZES){assert.ok(p.od>0&&p.s40>0&&p.s80>p.s40&&p.s80<p.od/2);assert.ok(p.nps&&p.dn)}
  assert.ok(MATERIALS.length>=6);
  const pipe=makePart({...standardPart('pipe'),dims:{length:1800,diameter:114.3,wall:6.02}});
