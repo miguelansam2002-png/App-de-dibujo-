@@ -17,7 +17,7 @@ import './ui.css';
 const $=id=>document.getElementById(id);
 const KEY='trazo-tecnico-3d-project-v3';
 const LEGACY_KEY='trazo-tecnico-3d-project-v2';
-let interactionMode='move',joinSource=null,snapMarker=null,studio=null,recoveredMeta=null;
+let interactionMode='move',joinSource=null,snapMarker=null,studio=null,recoveredMeta=null,editorActive=true;
 const root=$('viewport');
 let renderer,scene,camera,controls,transform,modelRoot,grid,axes,raycaster;
 let items=[],selected=null,activeCategory='Todos',history=[],future=[],models=new Map(),touchStart=null,toastTimeout=0;
@@ -111,7 +111,7 @@ function populateCatalog(){const tabs=$('categoryTabs');tabs.replaceChildren();f
 function focusSelected(){if(!selected||!models.get(selected)){fitScene();return}const obj=models.get(selected);const bound=new THREE.Box3().setFromObject(obj);const selectedPart=items.find(p=>p.id===selected);if(selectedPart?.joint?.targetId&&models.has(selectedPart.joint.targetId)){bound.expandByObject(models.get(selectedPart.joint.targetId))}const center=bound.getCenter(new THREE.Vector3());const dist=Math.max(bound.getSize(new THREE.Vector3()).length()*1.65,450);const dir=camera.position.clone().sub(controls.target).normalize();controls.target.copy(center);camera.position.copy(center).addScaledVector(dir,dist);controls.update();render();}
 function fitScene(){const bounds=new THREE.Box3().setFromObject(modelRoot);if(bounds.isEmpty()){controls.target.set(0,0,0);camera.position.set(1300,1050,1400)}else{const center=bounds.getCenter(new THREE.Vector3());const radius=bounds.getSize(new THREE.Vector3()).length();controls.target.copy(center);const length=Math.max(450,radius*1.05);camera.position.copy(center.clone().add(new THREE.Vector3(length,length*.76,length)))}camera.near=1;camera.far=300000;camera.updateProjectionMatrix();controls.update();render()}
 function setView(name){const dist=Math.max(700,camera.position.distanceTo(controls.target));const dir={iso:[1,0.8,1],top:[0,1,0.001],front:[0,0,1],right:[1,0,0]}[name]||[1,1,1];camera.position.copy(controls.target).add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist));camera.up.set(0,1,0);controls.update();document.querySelectorAll('[data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===name));render()}
-function render(){if(renderer&&scene)renderer.render(scene,camera)}
+function render(){if(editorActive&&renderer&&scene)renderer.render(scene,camera)}
 function example(){if(items.length&&!confirm('¿Sustituir el diseño actual por el ejemplo de tuberías?'))return;checkpoint();const config=[['pipe',[0,150,0]],['elbow',[675,150,75]],['flange',[-625,150,0]],['clamp_u',[0,150,0]],['pipe_shoe',[0,-85,0]],['valve',[1060,150,0]],['support',[-390,-190,0]],['flange_wn',[415,150,0]]];items=config.map(([type,pos],i)=>{const o=standardPart(type,i);o.pos=pos;return o});selected=null;$('projectName').value='Montaje de tubería y soportes';refreshScene();fitScene();notify('Ejemplo 3D cargado')}
 function undo(){if(!history.length)return;future.push(JSON.stringify(items));items=JSON.parse(history.pop());selected=null;refreshScene();refreshUndo()}
 function redo(){if(!future.length)return;history.push(JSON.stringify(items));items=JSON.parse(future.pop());selected=null;refreshScene();refreshUndo()}
@@ -228,6 +228,6 @@ function start(){try{init3d()}catch(err){console.error(err);root.textContent='Es
   replaceItems:(next,name)=>{items=next.map((x,i)=>normalizePart(x,i));selected=null;joinSource=null;history=[];future=[];if(name)$('projectName').value=name;refreshScene();fitScene();refreshUndo()},
   replaceProject:(data)=>{items=data.items.map(normalizePart);selected=null;joinSource=null;history=[];future=[];$('projectName').value=String(data.name||'Proyecto 3D').slice(0,90);refreshScene();fitScene();refreshUndo()}
  });studio.restore(recoveredMeta);
- createV12Shell({catalog:CATALOG,makePart,releasePart,standardPart,addPart,studio,notify,fitScene,renderScene:render});
+ createV12Shell({catalog:CATALOG,makePart,releasePart,standardPart,addPart,studio,notify,fitScene,renderScene:render,setEditorActive:active=>{editorActive=active}});
  status('Editor 3D V13 listo · biblioteca y estudio independientes')}
 start();
