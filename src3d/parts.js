@@ -84,27 +84,91 @@ function ring(parent,od,bore,thick,material,axis='x',x=0,y=0,z=0){const shape=ne
 function hex(parent,r,h,material,x=0,y=0,z=0,axis='y',bore=0){if(bore>0){const s=new THREE.Shape();for(let i=0;i<6;i++){const a=i*Math.PI/3+Math.PI/6;const px=Math.cos(a)*r,py=Math.sin(a)*r;i?s.lineTo(px,py):s.moveTo(px,py)}s.closePath();const hole=new THREE.Path();hole.absarc(0,0,bore/2,0,Math.PI*2,true);s.holes.push(hole);const g=new THREE.ExtrudeGeometry(s,{depth:h,bevelEnabled:false});g.translate(0,0,-h/2);if(axis==='y')g.rotateX(-Math.PI/2);if(axis==='x')g.rotateY(Math.PI/2);return add(parent,g,material,[x,y,z])}return cyl(parent,material,r,h,x,y,z,axis,6)}
 function perforatedTab(parent,material,length,width,thickness,holeD,x,y,z){const sh=new THREE.Shape(),a=length/2,b=width/2;sh.moveTo(-a,-b);sh.lineTo(a,-b);sh.lineTo(a,b);sh.lineTo(-a,b);sh.closePath();const hole=new THREE.Path();hole.absarc(0,0,Math.min(holeD/2,a*.7,b*.7),0,Math.PI*2,true);sh.holes.push(hole);const g=new THREE.ExtrudeGeometry(sh,{depth:thickness,bevelEnabled:false,curveSegments:30});g.translate(0,0,-thickness/2);g.rotateX(-Math.PI/2);return add(parent,g,material,[x,y,z])}
 function halfBand(parent,inner,wall,band,material,yBase=0,angle=Math.PI){const outer=inner+wall,nSegments=48,shape=new THREE.Shape();for(let i=0;i<=nSegments;i++){const a=Math.PI-i/nSegments*angle;const xx=Math.cos(a)*outer,yy=Math.sin(a)*outer+yBase;i?shape.lineTo(xx,yy):shape.moveTo(xx,yy)}for(let i=nSegments;i>=0;i--){const a=Math.PI-i/nSegments*angle;shape.lineTo(Math.cos(a)*inner,Math.sin(a)*inner+yBase)}shape.closePath();const g=new THREE.ExtrudeGeometry(shape,{depth:band,bevelEnabled:false,curveSegments:16});g.translate(0,0,-band/2);return add(parent,g,material)}
+function drilledPlate(parent,material,length,depth,thick,rodCenters,holeRadius,y=0){
+ const sh=new THREE.Shape(),h=depth/2,l=length/2;
+ sh.moveTo(-l+3,-h);sh.lineTo(l-3,-h);sh.quadraticCurveTo(l,-h,l,-h+3);
+ sh.lineTo(l,h-3);sh.quadraticCurveTo(l,h,l-3,h);sh.lineTo(-l+3,h);
+ sh.quadraticCurveTo(-l,h,-l,h-3);sh.lineTo(-l,-h+3);sh.quadraticCurveTo(-l,-h,-l+3,-h);sh.closePath();
+ for(const x of rodCenters){const hole=new THREE.Path();hole.absarc(x,0,holeRadius,0,Math.PI*2,true);sh.holes.push(hole)}
+ const g=new THREE.ExtrudeGeometry(sh,{depth:thick,bevelEnabled:false,curveSegments:24});
+ g.translate(0,0,-thick/2);g.rotateX(-Math.PI/2);return add(parent,g,material,[0,y,0]);
+}
 function materialSet(data){const base=mat(data.color||'#8c9ca8');return {base,steel:mat('#b8c6d1'),dark:mat('#405061',.5,.46),rubber:mat('#323941',.12,.83),brass:mat('#ad996c',.55,.38),paint:mat('#34788c',.42,.4)}}
 export function makePart(data){const def=partDefinition(data.type);if(!def)throw new Error('Pieza desconocida: '+data.type);const d={...def.dims,...data.dims};for(const k in d)d[k]=T(d[k],INTEGER_DIMS.has(k)?1:.5,INTEGER_DIMS.has(k)?32:18000);const L=d.length||300,D=d.diameter||114.3,W=d.wall||6;const group=new THREE.Group();group.name=data.name||def.label;group.userData.partId=data.id;const M=materialSet(data),m=M.base;
  switch(data.type){
- case 'pipe': hollow(group,L,D,W,m);break;
+ case 'pipe':{
+  hollow(group,L,D,W,m);
+  // Perfiles de borde suaves para apreciar el diámetro y el espesor exterior.
+  for(const x of [-L/2+.7,L/2-.7])torus(group,M.steel,D/2-.9,Math.min(1.15,W*.17),x,0,0,'x');
+  break}
  case 'pipe_nipple':hollow(group,L,D,W,m);for(const x of [-L*.4,L*.4])for(let i=0;i<5;i++)torus(group,M.steel,D/2,Math.min(1.3,W*.13),x+(i-2)*3,0,0,'x');break;
  case 'pipe_insulated':hollow(group,L,D,W,M.steel);hollow(group,L*.90,D+2*d.insulation,d.insulation,M.brass);break;
  case 'pipe_spool':hollow(group,L,D,W,m);for(const x of [-L/2+18,L/2-18])flange(group,d.flange,D-W*2,d.thickness,d.bolts,Math.max(12,d.thickness*.7),d.flange*.78,M.steel,x);break;
  case 'elbow':case 'elbow45':case 'elbow180':swept(group,arcPoints(d.radius,data.type==='elbow45'?45:data.type==='elbow180'?180:90),D,W,m,data.type==='elbow180'?96:56);break;
- case 'tee':case 'tee_reducing':hollow(group,L,D,W,m);hollow(group,d.branch,data.type==='tee'?D:d.branchDiameter,Math.min(W,d.branchDiameter?d.branchDiameter*.16:W),m,'y',0,d.branch/2,0);break;
+ case 'tee':case 'tee_reducing':{
+  const bd=data.type==='tee'?D:d.branchDiameter;
+  hollow(group,L,D,W,m);hollow(group,d.branch,bd,Math.min(W,bd*.16),m,'y',0,d.branch/2,0);
+  ring(group,D*1.045,Math.max(1,D-W*2),Math.min(5,W*.5),M.steel,'x',-L/2+4);
+  ring(group,D*1.045,Math.max(1,D-W*2),Math.min(5,W*.5),M.steel,'x',L/2-4);
+  ring(group,bd*1.045,Math.max(1,bd-2*W),Math.min(5,W*.5),M.steel,'y',0,d.branch-4,0);
+  break}
  case 'cross':hollow(group,L,D,W,m);hollow(group,d.branch,D,W,m,'y');break;
  case 'reducer':case 'reducer_ecc':{const D1=D,D2=Math.min(d.smallDiameter,D*.96),p=[new THREE.Vector2(Math.max(.5,D2/2-W),-L/2),new THREE.Vector2(D2/2,-L/2),new THREE.Vector2(D1/2,L/2),new THREE.Vector2(Math.max(.5,D1/2-W),L/2),new THREE.Vector2(Math.max(.5,D2/2-W),-L/2)];const g=new THREE.LatheGeometry(p,64);g.rotateZ(-Math.PI/2);const o=add(group,g,m);if(data.type==='reducer_ecc')o.position.y=(D1-D2)/4;break}
  case 'coupling':hollow(group,L,D,d.wall||8,m);for(const x of [-L*.31,L*.31])ring(group,D*1.07,d.bore,7,M.steel,'x',x);break;
  case 'union':hollow(group,L,D,W,m);hex(group,D*.74,L*.24,M.steel,0,0,0,'x',D-W*2);for(const x of [-L*.35,L*.35])ring(group,D*1.16,D-W*2,10,M.steel,'x',x);break;
  case 'cap':hollow(group,L*.57,D,W,m,'x',-L*.23);cyl(group,m,D/2,W+5,L*.08,0,0,'x');add(group,new THREE.SphereGeometry(D/2,40,22,0,2*Math.PI,0,Math.PI/2),m,[L*.08,0,0],[0,0,-Math.PI/2]);break;
- case 'flange':case 'flange_wn':case 'flange_blind':flange(group,D,data.type==='flange_blind'?0:d.bore,d.thickness,d.bolts,d.boltHole,d.pitch,m,0,data.type==='flange_blind');if(data.type==='flange_wn')cone(group,m,d.bore*.53,D*.31,d.neck,d.thickness*.5+d.neck*.5,0,0);break;
+ case 'flange':case 'flange_wn':case 'flange_blind':{
+  const blind=data.type==='flange_blind';
+  flange(group,D,blind?0:d.bore,d.thickness,d.bolts,d.boltHole,d.pitch,m,0,blind);
+  const face=Math.max(8,Math.min(D*.78,d.pitch-d.boltHole*1.8));
+  if(blind)cyl(group,M.steel,face*.5,2.8,d.thickness/2+1.2,0,0,'x',80);
+  else ring(group,face,d.bore,2.8,M.steel,'x',d.thickness/2+1.2);
+  if(data.type==='flange_wn'){
+   cone(group,m,Math.max(d.bore*.54,10),D*.34,d.neck,d.thickness*.5+d.neck*.5,0,0);
+   ring(group,Math.max(d.bore*1.11,12),d.bore,3,M.steel,'x',d.thickness/2+d.neck-2);
+  }
+  torus(group,M.dark,D*.485,Math.max(1.2,d.thickness*.055),-d.thickness/2+1.4,0,0,'x');
+  break}
  case 'gasket':ring(group,D,d.bore,d.thickness,M.rubber);break;
  case 'valve':case 'valve_ball':case 'valve_butterfly':case 'valve_check':{const bodyD=D*(data.type==='valve_butterfly'?1.18:1.03);hollow(group,L,D,Math.max(5,D*.15),m);if(data.type==='valve_butterfly'){cyl(group,m,bodyD*.64,L*.52);cyl(group,M.steel,D*.45,11,0,0,0,'x')}else if(data.type==='valve_ball'){add(group,new THREE.SphereGeometry(D*.7,36,24),m);cyl(group,M.steel,9,d.height*.43,0,d.height*.35,0);box(group,M.steel,D*.95,12,20,D*.32,d.height*.58,0)}else if(data.type==='valve_check'){cyl(group,m,D*.59,D*.55,0,D*.18,0);cyl(group,M.steel,D*.52,22,0,D*.72,0)}else{cyl(group,m,D*.69,D*.85);cyl(group,M.steel,11,d.height*.66,0,d.height*.43,0);torus(group,M.steel,D*.49,8,0,d.height*.76,0,'y');for(let a=0;a<4;a++){const ang=a*Math.PI/2;box(group,M.steel,5,5,D*.85,0,d.height*.76,0).rotation.y=ang}}break}
  case 'strainer':hollow(group,L,D,D*.11,m);{const mesh=cyl(group,m,D*.39,d.branch,0,-d.branch*.34,0);mesh.rotation.z=-Math.PI/3;cyl(group,M.steel,D*.43,18,d.branch*.20,-d.branch*.80,0,'x')}break;
- case 'clamp_u':{const r=d.width/2,rodR=d.rod/2,arcY=d.height/2-r;const pts=[new THREE.Vector3(-r,-d.height/2,0),new THREE.Vector3(-r,arcY,0)];for(let i=0;i<=32;i++){const a=Math.PI-i*Math.PI/32;pts.push(new THREE.Vector3(r*Math.cos(a),arcY+r*Math.sin(a),0))}pts.push(new THREE.Vector3(r,-d.height/2,0));rod(group,pts,rodR,m);const plateY=-d.height*.34;box(group,M.steel,d.width+4*d.rod,d.plate,d.rod*3.2,0,plateY,0);for(const x of [-r,r]){cyl(group,M.dark,rodR*1.14,3,x,plateY+d.plate/2+2,0);hex(group,rodR*1.73,d.rod*.85,M.steel,x,plateY+d.plate*.5+d.rod*.55,0);hex(group,rodR*1.73,d.rod*.85,M.steel,x,plateY-d.plate*.5-d.rod*.55,0);for(let i=0;i<5;i++)torus(group,M.steel,rodR*.98,.55,x,-d.height*.47+i*2.2,0,'y')}break}
- case 'clamp_omega':{const r=d.width/2,y0=-d.height*.35;halfBand(group,r,d.thickness,d.strap,m,y0);for(const sx of [-1,1]){const x=sx*(r+d.strap*.52);perforatedTab(group,m,d.strap*1.18,d.strap,d.thickness,d.holes,x,y0,0);ring(group,d.holes*1.8,d.holes,2,M.steel,'y',x,y0+d.thickness*.62,0)}break}
- case 'clamp_split':{const r=D/2+d.thickness*.28;halfBand(group,r,d.thickness,d.width,m,0,Math.PI);const down=new THREE.Group();halfBand(down,r,d.thickness,d.width,m,0,Math.PI);down.rotation.z=Math.PI;group.add(down);for(const sx of [-1,1]){const x=sx*(r+d.thickness*1.45);box(group,M.steel,d.thickness*2,d.thickness*1.5,d.width*1.3,x,0,0);for(const y of [-d.thickness*.9,d.thickness*.9]){cyl(group,M.dark,d.thickness*.4,d.width*1.4,x,y,0,'z')}}break}
+ case 'clamp_u':{
+  const r=d.width/2,rodR=d.rod/2,arcY=d.height/2-r;
+  const pts=[new THREE.Vector3(-r,-d.height/2,0),new THREE.Vector3(-r,arcY,0)];
+  for(let i=0;i<=48;i++){const a=Math.PI-i*Math.PI/48;pts.push(new THREE.Vector3(r*Math.cos(a),arcY+r*Math.sin(a),0))}
+  pts.push(new THREE.Vector3(r,-d.height/2,0));rod(group,pts,rodR,m);
+  const plateY=-d.height*.34;drilledPlate(group,M.steel,d.width+4*d.rod,d.rod*3.2,d.plate,[-r,r],rodR+1.1,plateY);
+  for(const x of [-r,r]){
+   for(const sign of [-1,1]){
+    const washerY=plateY+sign*(d.plate/2+1.6),nutY=plateY+sign*(d.plate/2+d.rod*.56+3);
+    ring(group,d.rod*2.55,d.rod+1.1,2.8,M.dark,'y',x,washerY,0);
+    hex(group,rodR*2.0,d.rod*.90,M.steel,x,nutY,0,'y',d.rod+1.1);
+   }
+   for(let i=0;i<9;i++)torus(group,M.steel,rodR*.96,.48,x,-d.height*.475+i*2.25,0,'y');
+  }break}
+ case 'clamp_omega':{
+  const r=d.width/2,y0=-d.height*.35;
+  halfBand(group,r,d.thickness,d.strap,m,y0);
+  for(const sx of [-1,1]){
+   const x=sx*(r+d.strap*.53);
+   perforatedTab(group,m,d.strap*1.25,d.strap,d.thickness,d.holes,x,y0,0);
+   ring(group,d.holes*1.95,d.holes,2.4,M.steel,'y',x,y0+d.thickness*.65,0);
+   cyl(group,M.dark,d.holes*.33,d.thickness*2.6,x,y0+d.thickness*.48,0,'y',24);
+   hex(group,d.holes*.83,Math.max(4,d.thickness*1.15),M.steel,x,y0+d.thickness*1.35,0);
+   torus(group,M.steel,d.holes*.92,.8,x,y0-d.thickness*.6,0,'y');
+  }break}
+ case 'clamp_split':{
+  const r=D/2+d.thickness*.28;
+  halfBand(group,r,d.thickness,d.width,m,0,Math.PI);
+  const down=new THREE.Group();halfBand(down,r,d.thickness,d.width,m,0,Math.PI);down.rotation.z=Math.PI;group.add(down);
+  for(const sx of [-1,1]){
+   const x=sx*(r+d.thickness*1.5);
+   for(const sy of [-1,1]){box(group,M.steel,d.thickness*2.7,d.thickness*.8,d.width*1.18,x,sy*d.thickness*.8,0);
+    const y=sy*d.thickness*.8;hex(group,d.thickness*.9,d.width*.15,M.steel,x,y,sy*d.width*.63,'z');
+   }
+   cyl(group,M.dark,d.thickness*.43,d.width*1.4,x,0,0,'z');
+  }
+  break}
  case 'clamp_saddle':halfBand(group,D/2,d.thickness,d.width,m,0,Math.PI);box(group,M.steel,d.length,d.thickness,d.width,0,-D*.15,0);for(const x of [-d.length*.40,d.length*.40])cyl(group,M.dark,d.thickness*.6,d.thickness*.7,x,-D*.15,0,'y');break;
  case 'clevis':{const r=D/2;const pts=[new THREE.Vector3(-r-d.rod,-d.height*.08,0),new THREE.Vector3(-r-d.rod,0,0)];for(let i=0;i<=24;i++){const a=Math.PI+i*Math.PI/24;pts.push(new THREE.Vector3((r+d.rod)*Math.cos(a),(r+d.rod)*Math.sin(a),0))}pts.push(new THREE.Vector3(r+d.rod,-d.height*.08,0));rod(group,pts,d.rod*.42,m);for(const x of [-r-d.rod,r+d.rod]){box(group,M.steel,d.rod*1.2,d.height*.55,d.width*.45,x,d.height*.26,0);cyl(group,M.dark,d.rod*.45,d.width,x,d.height*.35,0,'z')}cyl(group,M.steel,d.rod/2,d.height*.7,0,d.height*.5,0);break}
  case 'pipe_shoe':{halfBand(group,D/2,d.thickness,d.width,m,0);box(group,M.steel,d.length,d.thickness,d.width,0,-d.height*.65,0);for(const x of [-d.length*.27,d.length*.27])box(group,m,d.thickness,d.height*.65,d.width*.65,x,-d.height*.32,0);break}
