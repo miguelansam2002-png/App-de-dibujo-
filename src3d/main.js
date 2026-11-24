@@ -209,7 +209,6 @@ function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color('#132
    if(old!==JSON.stringify(items)){history.push(old);if(history.length>45)history.shift();future=[];refreshUndo()}
    syncModels();updateList();refreshJoinUI();saveLocal();status(candidate?'Piezas unidas y vinculadas · puedes seguir editando':'Pieza ubicada · posición guardada')}
   render()}
- }
  canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
  const resize=new ResizeObserver(()=>{const w=root.clientWidth,h=root.clientHeight;if(w<1||h<1)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);render()});resize.observe(root);
  (function tick(){requestAnimationFrame(tick);controls.update()})();
