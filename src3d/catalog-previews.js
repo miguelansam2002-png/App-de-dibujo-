@@ -28,7 +28,7 @@ function renderPreview(type,makePart,releasePart,standardPart){
   const bound=new THREE.Box3().setFromObject(g);
   const center=bound.getCenter(new THREE.Vector3()),size=bound.getSize(new THREE.Vector3());
   if(!Number.isFinite(size.length())||size.length()<.01)throw Error('Modelo sin dimensiones');
-  const radius=Math.max(size.length()*.5,20),distance=radius/Math.sin(THREE.MathUtils.degToRad(17.5))*1.35;
+  const radius=Math.max(size.length()*.5,20),distance=radius/Math.sin(THREE.MathUtils.degToRad(17.5))*1.10;
   const direction=new THREE.Vector3(1.2,.82,1.3).normalize();
   camera.position.copy(center).addScaledVector(direction,distance);camera.lookAt(center);
   camera.near=Math.max(.1,distance-radius*2);camera.far=Math.max(1000,distance+radius*3);camera.updateProjectionMatrix();
