@@ -1,0 +1,12 @@
+{
+  "name": "trazo-tecnico-2d",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Aplicación de bocetos y planos técnicos 2D",
+  "scripts": {
+    "check": "node --check src/app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
