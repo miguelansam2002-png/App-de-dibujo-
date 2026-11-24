@@ -23,7 +23,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  const getPart=type=>catalog.find(p=>p.type===type);
  function markRecent(type){recent=[type,...recent.filter(x=>x!==type)].slice(0,12);writeArray(RECENT_KEY,recent)}
  function pick(type){if(!getPart(type))return;markRecent(type);addPart(type);go('design');notify('Componente añadido. Puedes editarlo o unirlo a otro.')}
- function go(next){if(next==='design')pauseCatalogPreviews();page=next;document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
+ function go(next){if(next==='design')pauseCatalogPreviews();else if(typeof palette!=='undefined')palette.hidden=true;page=next;document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
    nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.page===next);b.setAttribute('aria-current',b.dataset.page===next?'page':'false')});
    if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};requestAnimationFrame(()=>requestAnimationFrame(()=>{fitScene?.();renderScene?.()}));return}
    document.body.classList.remove('v12-parts','v12-inspector');studio?.close();render();
@@ -91,7 +91,10 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  function showInspector(){document.body.classList.add('v12-inspector');document.body.classList.remove('v12-parts');document.getElementById('inspectorPanel')?.classList.add('open');document.getElementById('libraryPanel')?.classList.remove('open')}
  const actions=[['＋ Añadir pieza',showAdd,'primary'],['⌁ Unir',()=>document.getElementById('joinBtn')?.click()],['✥ Mover',()=>document.getElementById('moveBtn')?.click()],['◌ Vista',()=>document.getElementById('orbitBtn')?.click()],['⚙ Propiedades',showInspector],['▦ Guardar',()=>document.getElementById('btnSave')?.click()]];
  for(const [label,action,style] of actions)quick.append(button('v12-quick-btn '+(style||''),label,action));
- const more=button('v12-quick-btn v12-more','··· Más',()=>document.body.classList.toggle('v12-advanced'));quick.append(more);
+ const palette=h('section','v13-tool-palette');palette.setAttribute('aria-label','Más herramientas de diseño');palette.hidden=true;document.body.append(palette);
+ const paletteGroups=[['Crear piezas',[['Bloque sólido',()=>pick('solid_block')],['Cilindro',()=>pick('solid_cylinder')],['Motor CAD exacto',()=>studio.openTools('brep')]]],['Ensamblar y revisar',[['Restricciones',()=>studio.openTools('assembly')],['Medir distancias',()=>studio.openTools('measure')],['Interferencias',()=>studio.openTools('collision')]]],['Documentar y gestionar',[['Planos e informes',()=>studio.openDocs()],['Trenes prediseñados',()=>studio.openTrains()],['Herramientas avanzadas',()=>{document.body.classList.add('v12-advanced')}]]]];
+ for(const [title,tools] of paletteGroups){const group=h('div','v13-tool-group');group.append(h('h3','',title));for(const [label,handler] of tools){group.append(button('v13-tool',label,()=>{palette.hidden=true;handler()}))}palette.append(group)}
+ const more=button('v12-quick-btn v12-more','··· Más',()=>{palette.hidden=!palette.hidden});quick.append(more);
  const guide=button('v12-tip','? Guía',showGuide);quick.append(guide);
  const tools=button('v12-tip','▧ Planos',()=>studio.openDocs());quick.append(tools);
  const homeBtn=button('v12-home-button','⌂ Inicio',()=>go('home'));document.querySelector('.top-actions')?.prepend(homeBtn);
