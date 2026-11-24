@@ -6,6 +6,7 @@ Editor 3D de ingeniería liviano, paramétrico y táctil, orientado a tuberías,
 
 - **47 tipos de piezas originales** agrupadas en tuberías, accesorios, bridas, válvulas, grapas, soportes, estructuras, fijaciones y equipos. No usa modelos de fabricantes sin licencia.
 - **Modelos mejorados**: tuberías huecas con espesor visible, codos curvados huecos, grapas tipo U con varilla, tuercas y placa; grapas omega con banda curvada y taladros; bridas y placas con agujeros geométricos reales, perfiles estructurales, diversos tipos de válvulas y accesorios.
+- **Inserción visible**: cada pieza nueva se posiciona junto a las existentes y se encuadra automáticamente para que no quede escondida dentro de tuberías o equipos.
 - **Interacción directa con piezas**: modo Mover, selección tocando la geometría y arrastre con dedo o ratón sobre planos XZ, XY o YZ; modo Vista para girar cámara; modo Girar con aros 3D. En zonas vacías se puede orbitar la cámara.
 - **Movimiento preciso**: pasos de 1, 5, 10, 25, 50 y 100 mm, o libre; controles de desplazamiento ±X/±Y/±Z, giros rápidos ±90° y campos de posición y rotación numéricos.
 - **Diámetros de tubería NPS/DN**: opciones de 1/2 a 12 pulgadas con diámetro exterior y espesor de pared de Schedule 40/80 de referencia; datos a contrastar con especificaciones de proyecto.

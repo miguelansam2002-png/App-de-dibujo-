@@ -33,6 +33,9 @@ try{
   await page.locator('[data-jog="X:1"]').click();
   assert.equal(Number(await page.locator('#posX').inputValue()),285);
   await page.screenshot({path:'qa-screenshots/omega.png'});
+  // Al insertar una pieza debe centrarse automáticamente para que se vea claramente.
+  await page.locator('#btnFocus').click();
+  assert.ok(await page.locator('#viewport canvas').isVisible());
   await page.locator('#librarySearch').fill('tubería recta');await page.locator('.part-card').first().click();
   await page.locator('#npsSelect').selectOption('4');await page.locator('#applyNps').click();
   const inputs=await page.locator('#dimensionFields input').evaluateAll(a=>a.map(x=>Number(x.value)));
