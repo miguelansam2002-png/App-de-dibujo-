@@ -17,7 +17,7 @@ import './ui.css';
 const $=id=>document.getElementById(id);
 const KEY='trazo-tecnico-3d-project-v3';
 const LEGACY_KEY='trazo-tecnico-3d-project-v2';
-let interactionMode='move',joinSource=null,snapMarker=null,studio=null,recoveredMeta=null,editorActive=true;
+let interactionMode='orbit',joinSource=null,snapMarker=null,studio=null,recoveredMeta=null,editorActive=true;
 const root=$('viewport');
 let renderer,scene,camera,controls,transform,modelRoot,grid,axes,raycaster;
 let items=[],selected=null,activeCategory='Todos',history=[],future=[],models=new Map(),touchStart=null,toastTimeout=0;
@@ -151,7 +151,7 @@ function setupEvents(){
  $('btnDuplicate').onclick=()=>{const orig=items.find(x=>x.id===selected);if(!orig||items.length>=MAX_ITEMS)return;checkpoint();const next=normalizePart(orig,items.length);next.id='part-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);delete next.joint;delete next.constraint;next.name=orig.name+' copia';next.pos[0]+=80;items.push(next);refreshScene();selectPart(next.id)};
  $('btnDelete').onclick=()=>{if(!selected)return;checkpoint();items=items.filter(x=>x.id!==selected);for(const p of items){if(p.joint?.targetId===selected)delete p.joint;if(p.constraint?.targetId===selected)delete p.constraint;}selected=null;joinSource=null;refreshScene()};
  $('snapStep').onchange=()=>{const step=getSnap();$('jogInfo').textContent=(step||1)+' mm';transform.setTranslationSnap(step||null)};$('movePlane').onchange=()=>status('Plano de movimiento: '+$('movePlane').selectedOptions[0].textContent);$('applyNps').onclick=applyNps;document.querySelectorAll('[data-jog]').forEach(b=>b.onclick=()=>{const [axis,sig]=b.dataset.jog.split(':');moveJog(axis,Number(sig))});document.querySelectorAll('[data-quickrotate]').forEach(b=>b.onclick=()=>{const p=items.find(x=>x.id===selected);if(!p)return;const [axis,angle]=b.dataset.quickrotate.split(':');checkpoint();delete p.joint;delete p.constraint;p.rot['XYZ'.indexOf(axis)]=(p.rot['XYZ'.indexOf(axis)]+Number(angle))%360;refreshScene()});$('gridToggle').onchange=e=>{grid.visible=e.target.checked;render()};$('axesToggle').onchange=e=>{axes.visible=e.target.checked;render()};$('snapToggle').onchange=()=>{transform.setTranslationSnap(getSnap()||null);$('jogInfo').textContent=(getSnap()||1)+' mm'};
- $('moveBtn').onclick=()=>setMode('move');$('orbitBtn').onclick=()=>setMode('orbit');$('rotateBtn').onclick=()=>setMode('rotate');setMode('move');
+ $('moveBtn').onclick=()=>setMode('move');$('orbitBtn').onclick=()=>setMode('orbit');$('rotateBtn').onclick=()=>setMode('rotate');setMode('orbit');
  document.querySelectorAll('[data-view]').forEach(btn=>btn.onclick=()=>setView(btn.dataset.view));
  $('libraryToggle').onclick=()=>{$('libraryPanel').classList.toggle('open');$('inspectorPanel').classList.remove('open')};$('libraryClose').onclick=()=>$('libraryPanel').classList.remove('open');$('inspectorToggle').onclick=()=>{$('inspectorPanel').classList.toggle('open');$('libraryPanel').classList.remove('open')};$('inspectorClose').onclick=()=>$('inspectorPanel').classList.remove('open');setupTouchDock();
  window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if(e.key==='Delete'&&selected){$('btnDelete').click()}else if(e.key==='Escape'){joinSource=null;$('joinBtn').classList.remove('armed');$('btnJoinTap').classList.remove('armed');selectPart(null);closePanels()}});
