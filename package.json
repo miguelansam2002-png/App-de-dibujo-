@@ -1,9 +1,9 @@
 {
   "name": "trazo-tecnico-3d",
   "private": true,
-  "version": "12.0.0",
+  "version": "13.0.0",
   "type": "module",
-  "description": "Trazo Tecnico Studio V12: interfaz guiada, biblioteca independiente, historial y respaldo seguro, planos A3/A4, cortes 3D, DXF, PDF, inspecciones y documentacion de ingenieria",
+  "description": "Trazo Tecnico Studio V13: proyectos independientes, calidad 3D y nueva interfaz, biblioteca independiente, historial y respaldo seguro, planos A3/A4, cortes 3D, DXF, PDF, inspecciones y documentacion de ingenieria",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
