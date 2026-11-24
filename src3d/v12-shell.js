@@ -1,4 +1,5 @@
-import {bindCatalogPreviews} from './catalog-previews.js';
+import {bindCatalogPreviews,pauseCatalogPreviews} from './catalog-previews.js';
+import {listProjects} from './project-store.js';
 import {TRAIN_PRESETS} from './train-presets.js';
 import './v12-shell.css';
 
@@ -15,27 +16,28 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  const quick=h('div','v12-quick');quick.id='v12-quick';document.body.append(quick);
  const advancedRail=document.querySelector('.studio-rail');if(advancedRail)document.body.append(advancedRail);
  const nav=h('nav','v12-nav');nav.setAttribute('aria-label','Navegación principal');
- const navItems=[['home','Inicio'],['library','Biblioteca 3D'],['design','Estudio de diseño']];
+ const navItems=[['home','Inicio'],['library','Biblioteca 3D'],['projects','Proyectos'],['design','Estudio de diseño']];
  for(const [key,name] of navItems){const b=button('v12-nav-button',name,()=>go(key));b.dataset.page=key;nav.append(b)}
  document.querySelector('.topbar')?.prepend(nav);
  const getPart=type=>catalog.find(p=>p.type===type);
  function markRecent(type){recent=[type,...recent.filter(x=>x!==type)].slice(0,12);writeArray(RECENT_KEY,recent)}
  function pick(type){if(!getPart(type))return;markRecent(type);addPart(type);go('design');notify('Componente añadido. Puedes editarlo o unirlo a otro.')}
- function go(next){page=next;document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
+ function go(next){if(next==='design')pauseCatalogPreviews();page=next;document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
    nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.page===next);b.setAttribute('aria-current',b.dataset.page===next?'page':'false')});
-   if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};setTimeout(()=>{fitScene?.();renderScene?.()},120);return}
+   if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};requestAnimationFrame(()=>requestAnimationFrame(()=>{fitScene?.();renderScene?.()}));return}
    document.body.classList.remove('v12-parts','v12-inspector');studio?.close();render();
  }
  const heroBtn=(icon,title,desc,onClick,primary=false)=>{const b=button('v12-path'+(primary?' primary':''),'',onClick);b.append(h('div','v12-path-icon',icon),h('strong','',title),h('p','',desc),h('span','v12-path-cta','Abrir →'));return b};
  function head(parent,kicker,title,description){const intro=h('section','v12-head');intro.append(h('span','v12-kicker',kicker),h('h1','',title),h('p','',description));parent.append(intro)}
  function renderHome(){
  const content=h('main','v12-page');home.append(content);
- head(content,'TRAZO TÉCNICO 3D · STUDIO V12','¿Qué deseas hacer?','Dos espacios independientes. Explora modelos con tranquilidad o diseña con herramientas que aparecen cuando las necesitas.');
+ head(content,'TRAZO TÉCNICO 3D · STUDIO V13','¿Qué deseas hacer?','Dos espacios independientes. Explora modelos con tranquilidad o diseña con herramientas que aparecen cuando las necesitas.');
  const paths=h('section','v12-paths');
  paths.append(heroBtn('◈','Explorar biblioteca','Conoce piezas, equipos y trenes precargados sin alterar tu proyecto.',()=>go('library'),true),heroBtn('✦','Entrar al estudio','Crea, agrega, ensambla y modifica piezas en un espacio limpio.',()=>go('design')));
+ paths.append(heroBtn('▦','Mis proyectos','Reabre tus trabajos y utiliza plantillas de equipos ya preparadas.',()=>go('projects')));
  content.append(paths);
  const bottom=h('div','v12-home-bottom');
- bottom.append(button('v12-secondary','▦ Mis proyectos',()=>{go('design');studio.openProjects()}),button('v12-secondary','⚙ Trenes de compresión',()=>{go('design');studio.openTrains()}),button('v12-secondary','? Guía rápida',()=>{go('design');showGuide()}));
+ bottom.append(button('v12-secondary','▦ Mis proyectos',()=>go('projects')),button('v12-secondary','⚙ Trenes de compresión',()=>{go('design');studio.openTrains()}),button('v12-secondary','? Guía rápida',()=>{go('design');showGuide()}));
  content.append(bottom);
  const note=h('p','v12-footnote','Tus diseños siguen siendo editables. Los modelos precargados son conceptuales y no sustituyen documentación técnica certificada.');content.append(note);
  }
@@ -65,7 +67,24 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  const presets=h('div','v12-train-cards');
  for(const t of TRAIN_PRESETS){const card=h('article','v12-train');card.append(h('span','','⚙'),h('strong','',t.title),h('p','',t.subtitle),button('v12-secondary','Abrir conjuntos',()=>{go('design');studio.openTrains()}));presets.append(card)}trains.append(presets);content.append(trains);
  }
- function render(){home.replaceChildren();if(page==='home')renderHome();else if(page==='library')renderLibrary()}
+ async function renderProjects(){
+ const content=h('main','v12-page v13-projects-page');home.append(content);
+ head(content,'CENTRO DE TRABAJO · V13','Tus proyectos y modelos preparados','Elige un proyecto guardado o parte de una plantilla industrial sin buscar entre los menús del editor.');
+ const commands=h('div','v12-home-bottom');
+ commands.append(button('v12-secondary','+ Nuevo diseño',()=>{go('design');document.getElementById('btnNew')?.click()}));
+ commands.append(button('v12-secondary','Abrir archivo JSON',()=>{go('design');document.getElementById('btnOpen')?.click()}));
+ commands.append(button('v12-secondary','Gestión avanzada',()=>{go('design');studio.openProjects()}));
+ content.append(commands);
+ const saved=h('section','v13-project-section');saved.append(h('h2','','Proyectos guardados'));
+ const grid=h('div','v13-project-grid');grid.append(h('p','v12-no-results','Consultando proyectos locales…'));saved.append(grid);content.append(saved);
+ try{const records=await listProjects();if(page!=='projects')return;grid.replaceChildren();
+  for(const project of records){const card=h('article','v13-project-card');card.append(h('span','v12-kicker','DISEÑO EDITABLE'),h('strong','',project.name||'Proyecto sin nombre'),h('p','',String(project.pieces||0)+' piezas · '+(project.category||'General')),h('small','',new Date(project.updatedAt).toLocaleDateString('es-ES')));const open=button('v12-model-add','Abrir proyecto',async()=>{open.disabled=true;try{await studio.openProjectFromHome(project.id);go('design')}catch(error){notify('No se pudo abrir: '+error.message)}finally{open.disabled=false}});card.append(open);grid.append(card)}
+  if(!records.length)grid.append(h('p','v12-no-results','No hay proyectos guardados todavía. Puedes crear uno o importar un archivo JSON.'));
+ }catch(error){grid.replaceChildren(h('p','v12-no-results','No se pudo consultar el almacenamiento: '+error.message))}
+ const templates=h('section','v13-project-section');templates.append(h('h2','','Proyectos prediseñados · trenes de compresión'),h('p','v13-muted','Plantillas conceptuales originales. Añádelas a tu diseño y personaliza cada componente.'));
+ const options=h('div','v13-project-grid');for(const preset of TRAIN_PRESETS){const card=h('article','v13-project-card');card.append(h('span','v12-kicker','PLANTILLA 3D'),h('strong','',preset.title),h('p','',preset.subtitle));card.append(button('v12-model-add','Crear desde plantilla',()=>{try{studio.insertTrainPresetFromHome(preset.id);go('design')}catch(error){notify(error.message)}}));options.append(card)}templates.append(options);content.append(templates);
+}
+ function render(){home.replaceChildren();if(page==='home')renderHome();else if(page==='library')renderLibrary();else if(page==='projects')void renderProjects()}
  function showGuide(){const existing=document.getElementById('v12-guide');if(existing)existing.remove();const cover=h('div','v12-guide-cover');cover.id='v12-guide';const modal=h('section','v12-guide-modal');modal.setAttribute('role','dialog');modal.setAttribute('aria-label','Guía rápida');modal.append(h('span','v12-kicker','EMPIEZA AQUÍ'),h('h2','','Diseña en cuatro pasos'));for(const [n,title,desc] of intro){const line=h('div','v12-guide-line');line.append(h('b','',n),h('div','',title+' · '+desc));modal.append(line)}modal.append(button('v12-model-add','Entendido, comenzar',()=>cover.remove()));cover.append(modal);cover.addEventListener('click',e=>{if(e.target===cover)cover.remove()});document.body.append(cover)}
  function showAdd(){document.body.classList.add('v12-parts');document.body.classList.remove('v12-inspector');document.getElementById('libraryPanel')?.classList.add('open');document.getElementById('inspectorPanel')?.classList.remove('open');document.getElementById('librarySearch')?.focus()}
  function showInspector(){document.body.classList.add('v12-inspector');document.body.classList.remove('v12-parts');document.getElementById('inspectorPanel')?.classList.add('open');document.getElementById('libraryPanel')?.classList.remove('open')}
@@ -75,6 +94,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  const guide=button('v12-tip','? Guía',showGuide);quick.append(guide);
  const homeBtn=button('v12-home-button','⌂ Inicio',()=>go('home'));document.querySelector('.top-actions')?.prepend(homeBtn);
  const libraryBtn=button('v12-home-button','◈ Modelos',()=>go('library'));document.querySelector('.top-actions')?.prepend(libraryBtn);
+ const projectsBtn=button('v12-home-button','▦ Proyectos',()=>go('projects'));document.querySelector('.top-actions')?.prepend(projectsBtn);
  const closePanels=()=>{document.body.classList.remove('v12-parts','v12-inspector');document.getElementById('libraryPanel')?.classList.remove('open');document.getElementById('inspectorPanel')?.classList.remove('open')};
  document.getElementById('libraryClose')?.addEventListener('click',closePanels);
  document.getElementById('inspectorClose')?.addEventListener('click',closePanels);
