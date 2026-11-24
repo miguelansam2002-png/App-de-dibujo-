@@ -74,7 +74,7 @@ try{
   assert.ok(await page.getByText('Motor B-Rep · OpenCascade').isVisible());
   assert.ok(await page.getByRole('button',{name:'Crear sólido B-Rep'}).isVisible());
   await page.getByRole('button',{name:'Planos'}).click();
-  assert.ok(await page.getByText('Exportar plano A3 (SVG)').isVisible());
+  assert.ok(await page.getByRole('button',{name:'Exportar SVG'}).isVisible());
   await page.getByRole('button',{name:'Proyectos',exact:true}).click();
   assert.ok(await page.getByText('Mis proyectos', {exact:true}).isVisible());
   await page.locator('.studio-close').click();
