@@ -70,6 +70,19 @@ export function createStudio(api){
   if(!entries.length)grid.append(elm('p',{class:'studio-muted'},'Sin proyectos adicionales. Guarda el actual para incorporarlo a la lista.'));saved.append(grid);
   await renderRecoveryPanel(body,{projectId:current.id,getProject:api.getProject,checkpoint:api.checkpoint,replaceProject:api.replaceProject,restore,notify:showToast,refresh:openProjects});
  }
+ async function openProjectFromHome(id){
+  const loaded=await loadProject(id);if(!loaded)throw Error('Proyecto no encontrado');
+  if(loaded.meta?.id!==current.id)await persist();
+  api.replaceProject(loaded);restore(loaded.meta);close();api.fitScene();showToast('Proyecto abierto: '+loaded.name);
+ }
+ function insertTrainPresetFromHome(id){
+  const t=TRAIN_PRESETS.find(x=>x.id===id);if(!t)throw Error('Tren de compresión no encontrado');
+  const currentItems=api.items(),preserved=currentItems.length===1&&currentItems[0].type==='pipe'?[]:currentItems;
+  const preset=buildTrainPreset(id,api.standardPart,{offset:preserved.length?[0,0,-4800]:[0,0,0]});
+  if(preserved.length+preset.items.length>500)throw Error('El proyecto superaría el máximo de componentes');
+  api.checkpoint();api.replaceItems([...preserved,...preset.items],preserved.length?undefined:t.title);
+  close();api.fitScene();showToast('Plantilla insertada: '+t.title);
+ }
  function openTrains(){const panel=newPanel('Trenes de compresión','Conjuntos paramétricos de estudio. Carcasa, rotor, transmisión, instrumentación y auxiliares.',true);panel.dataset.panel='trains';const body=elm('div',{class:'studio-panel-body'});panel.append(body);
   const hero=elm('div',{class:'studio-hero'});hero.append(elm('div',{class:'studio-eyebrow'},'BIBLIOTECA DE ENSAMBLAJES INDUSTRIALES'),elm('h3',{},'Modela equipos completos en minutos'),elm('p',{},'Modelos conceptuales originales, sin equivalencia certificada con equipos de fabricante. Puedes inspeccionar y editar todas sus piezas.'));body.append(hero);
   const cards=elm('div',{class:'studio-template-grid'});for(const t of TRAIN_PRESETS){const c=elm('div',{class:'studio-template-card'});c.append(elm('span',{class:'studio-template-icon'},t.icon),elm('strong',{},t.title),elm('p',{},t.subtitle),elm('small',{},`Envolvente de bancada: ${format(t.length)} mm`));action(c,'Insertar tren',async()=>{if(api.items().length>1&&!confirm('¿Añadir este tren al diseño actual? Puedes guardarlo antes.'))return;
@@ -263,5 +276,5 @@ export function createStudio(api){
  fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;try{showToast('Procesando modelo 3D…');const imported=await importMeshFile(file,fileInput.dataset.units||'mm');const piece=api.standardPart('custom_mesh',api.items().length);piece.name=file.name.slice(0,75);piece.asset=imported.asset;piece.pos=imported.center;piece.dims=imported.dims;piece.metadata={sourceFile:file.name,sourceFormat:imported.sourceFormat,validation:'NO VERIFICADO'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Modelo STL/GLB importado. Revisa sus unidades y geometría.')}catch(e){console.error(e);showToast('Error de importación: '+e.message)}finally{fileInput.value=''}});
  railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('assembly').onclick=()=>openTools('assembly');railButtons.get('workshop').onclick=()=>openTools('workshop');railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
  window.addEventListener('keydown',e=>{if(e.key==='Escape')close();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();persist().then(()=>showToast('Proyecto guardado localmente'))}});
- renderSummary();return {snapshotMeta,restore,changed,openProjects,openTrains,openTools,openDocs,close,persist};
+ renderSummary();return {snapshotMeta,restore,changed,openProjects,openTrains,openTools,openDocs,close,persist,openProjectFromHome,insertTrainPresetFromHome};
 }
