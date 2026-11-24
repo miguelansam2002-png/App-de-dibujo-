@@ -20,8 +20,10 @@ try{
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
-  assert.equal(await page.locator('.part-card').count(),47,'El catálogo debe mostrar 47 componentes');
+  assert.equal(await page.locator('.part-card').count(),99,'El catálogo debe mostrar 99 componentes');
   assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V4 listo'),true);
+  await page.waitForTimeout(600);
+  assert.ok(await page.locator('.part-card[data-part-type]').count()===99,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
   await page.locator('#librarySearch').fill('omega');
   assert.equal(await page.locator('.part-card').count(),1);
