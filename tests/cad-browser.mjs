@@ -30,6 +30,11 @@ try{
  const file=await exported;
  assert.match(file.suggestedFilename(),/\.step$/i);
  const download=await readFile(await file.path());assert.ok(download.length>500,'STEP exportado vacío');
+ // Reimportar el mismo STEP para comprobar que el B-Rep vuelve a abrirse.
+ await page.locator('input[accept=".step,.stp"]').setInputFiles({name:'bloque-reimportado.step',mimeType:'application/step',buffer:download});
+ await page.waitForFunction(()=>{const p=JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3')||'null');return (p?.items?.filter(x=>x.cad?.stepSource).length||0)>=2},null,{timeout:160000});
+ const parts=await page.evaluate(()=>JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3')).items.filter(x=>x.cad?.stepSource).map(x=>({id:x.id,name:x.name})));
+ assert.equal(parts.length,2,'La importación STEP debe crear un segundo B-Rep independiente');
  await mkdir('qa-screenshots',{recursive:true});
  await page.screenshot({path:'qa-screenshots/cad-exacto-v7.png'});
  assert.deepEqual(errors,[],`Errores JavaScript: ${errors.join(', ')}`);
