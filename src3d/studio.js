@@ -9,6 +9,8 @@ import {cadCreate,cadImport,cadBoolean,cadExport,cadStop} from './cad-runtime.js
 import {CONSTRAINT_KINDS,referenceAnchors,createConstraint,solveAssembly,shiftRigidGroup,worldAnchor,descendants} from './assembly-engine.js';
 import {scanInterferences,clearanceFromBounds} from './interference-v8.js';
 import {renderV9Workshop} from './v9-workshop.js';
+import {renderEngineeringDocs} from './v10-workspace.js';
+import {normalizeDocumentMeta} from './v10-records.js';
 import './assembly-v8.css';
 import './studio.css';
 import './cad-ui.css';
@@ -18,7 +20,7 @@ const safe=(v)=>String(v??'').slice(0,100);
 const format=n=>Number(n||0).toLocaleString('es-ES',{maximumFractionDigits:1});
 
 export function createStudio(api){
- let current={id:uid(),category:'General',createdAt:new Date().toISOString(),notes:'',revision:'0'};
+ let current={id:uid(),category:'General',createdAt:new Date().toISOString(),notes:'',revision:'0',doc:null};
  let drawer=null,modal=null,timer=null,previewExplosion=null,measurePair=[],storeAvailable=true,activeProjectId=null,showRefs=false,refGroup=null;
  const root=by('viewportWrap');
  const backdrop=elm('div',{class:'studio-backdrop hidden',id:'studioBackdrop'});document.body.append(backdrop);
@@ -35,7 +37,7 @@ export function createStudio(api){
  const persist=async()=>{try{const proj=api.getProject();proj.meta={...current};await storeProject(proj);activeProjectId=current.id;storeAvailable=true;}catch(e){storeAvailable=false;api.status('Guardar proyecto JSON: el almacenamiento local no está disponible');}};
  function schedulePersist(){clearTimeout(timer);timer=setTimeout(()=>{persist()},1150)}
  function snapshotMeta(){return {...current,updatedAt:new Date().toISOString()}}
- function restore(meta){if(meta&&typeof meta==='object'){current={id:safe(meta.id)||uid(),category:safe(meta.category||'General'),notes:safe(meta.notes||''),createdAt:String(meta.createdAt||new Date().toISOString()),revision:String(meta.revision||'0')};}else current={id:uid(),category:'General',notes:'',createdAt:new Date().toISOString(),revision:'0'};schedulePersist();}
+ function restore(meta){if(meta&&typeof meta==='object'){current={id:safe(meta.id)||uid(),category:safe(meta.category||'General'),notes:safe(meta.notes||''),createdAt:String(meta.createdAt||new Date().toISOString()),revision:String(meta.revision||'0'),doc:meta.doc&&typeof meta.doc==='object'?normalizeDocumentMeta(meta.doc):null};}else current={id:uid(),category:'General',notes:'',createdAt:new Date().toISOString(),revision:'0',doc:null};schedulePersist();}
  function close(){if(refGroup&&!showRefs)disposeReferences();if(drawer){drawer.remove();drawer=null}if(modal){modal.remove();modal=null}backdrop.classList.add('hidden');railButtons.forEach(b=>b.classList.remove('active'));}
  backdrop.addEventListener('click',close);
  const newPanel=(title,subtitle,wide=false)=>{
@@ -250,15 +252,10 @@ export function createStudio(api){
   }
   switchTab(tab);
  }
- async function openDocs(){const panel=newPanel('Planos y documentación','Exportación de láminas, listas de materiales e informes preliminares.',true);panel.dataset.panel='docs';const body=elm('div',{class:'studio-panel-body'});panel.append(body);
-  const s=assemblySummary(api.items());const card=section(body,'Resumen del proyecto',`${s.pieces} piezas · ${s.assemblies} conjuntos · ${s.types} familias · ${s.linked} conexiones`);
-  const rows=billOfMaterials(api.items(),api.partDefinition);const box=elm('div',{class:'studio-bom-table'});for(const row of rows.slice(0,50)){const r=elm('div');r.append(elm('strong',{},row.description),elm('span',{},'×'+row.quantity));box.append(r)}card.append(box);
-  action(body,'Exportar plano A3 (SVG)',async()=>{try{restoreExploded();const svg=createDrawingSVG(api.items(),api.models,by('projectName').value,current);await api.sendFile(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'trazo-plano-A3.svg');showToast('Lámina A3 exportada')}
-    catch(e){showToast('Error al crear lámina: '+e.message)}},'studio-action primary');
-  action(body,'Exportar lista de materiales CSV',async()=>{await api.sendFile(new Blob([bomToCsv(rows)],{type:'text/csv;charset=utf-8'}),'trazo-lista-materiales.csv')});
-  action(body,'Exportar informe HTML para imprimir',async()=>{const report=createReportHTML(api.items(),by('projectName').value,current.notes,api.partDefinition);await api.sendFile(new Blob([report],{type:'text/html;charset=utf-8'}),'trazo-informe-tecnico.html')});
-  action(body,'Guardar proyecto editable JSON',()=>api.exportFile('json'));
-  body.append(elm('p',{class:'studio-warning'},'Las vistas son proyecciones visuales, no planos de fabricación con cotas y tolerancias homologadas.'));
+ async function openDocs(){
+  const panel=newPanel('Planos, cortes e informes · V10','Documentación técnica, registros de inspección, listas de materiales y planos SVG/PDF/DXF.',true);
+  panel.dataset.panel='docs';const body=elm('div',{class:'studio-panel-body'});panel.append(body);
+  renderEngineeringDocs(body,api,current,{notify:showToast,restoreExploded,explode,persist:schedulePersist});
  }
  stepInput.addEventListener('change',async()=>{const file=stepInput.files?.[0];if(!file)return;try{showToast('Importando B-Rep STEP…');const result=await cadImport(file);const part=api.standardPart('custom_mesh',api.items().length);part.name=file.name.replace(/\.(step|stp)$/i,'').slice(0,80);part.asset=result.asset;part.pos=result.center;part.dims=result.dims;part.cad={kind:'brep',stepSource:result.stepSource,origin:result.center,spec:{kind:'importSTEP',fileName:file.name}};part.metadata={sourceFile:file.name,sourceFormat:'STEP B-Rep',validation:'SIN VERIFICAR',unit:'mm'};api.checkpoint();api.appendPart(part);api.selectPart(part.id);api.focusSelected();showToast('STEP cargado en formato B-Rep · exportación disponible');close();}catch(e){console.error(e);showToast('Error STEP: '+e.message)}finally{stepInput.value=''}});
  fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;try{showToast('Procesando modelo 3D…');const imported=await importMeshFile(file,fileInput.dataset.units||'mm');const piece=api.standardPart('custom_mesh',api.items().length);piece.name=file.name.slice(0,75);piece.asset=imported.asset;piece.pos=imported.center;piece.dims=imported.dims;piece.metadata={sourceFile:file.name,sourceFormat:imported.sourceFormat,validation:'NO VERIFICADO'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Modelo STL/GLB importado. Revisa sus unidades y geometría.')}catch(e){console.error(e);showToast('Error de importación: '+e.message)}finally{fileInput.value=''}});
