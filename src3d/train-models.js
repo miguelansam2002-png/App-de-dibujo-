@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {V9_PARTS,makeV9Model} from './v9-compressor-models.js';
 
 // Geometria de equipos rotativos ORIGINAL para estudio, dimensiones en mm.
 // Las proporciones NO representan planos certificados de fabricantes.
@@ -26,6 +27,7 @@ export const TRAIN_PARTS=[
  P('solid_cylinder','Sólido: cilindro','Sólidos CAD','Primitiva apta para booleanas de malla',{length:460,diameter:265}),
  P('solid_sphere','Sólido: esfera','Sólidos CAD','Primitiva apta para booleanas de malla',{diameter:330}),
  P('custom_mesh','Modelo importado','Personalizados','Geometría importada o de operación CSG',{length:200,width:200,height:200}),
+ ...V9_PARTS
 ];
 
 const DEG=Math.PI/180;
@@ -45,6 +47,7 @@ function labels(p,m,L,H,D){b(p,m,0,H*.25,D*.51,Math.min(240,L*.32),Math.min(82,H
 function vanes(p,m,impR,count=12,x=0,width=75){for(let i=0;i<count;i++){const a=i/count*Math.PI*2;const shape=new THREE.Shape();shape.moveTo(0,0);shape.bezierCurveTo(impR*.18,impR*.13,impR*.56,impR*.25,impR*.83,impR*.63);shape.lineTo(impR*.86,impR*.75);shape.bezierCurveTo(impR*.62,impR*.26,impR*.22,impR*.21,0,impR*.1);shape.closePath();const geom=new THREE.ExtrudeGeometry(shape,{depth:width,bevelEnabled:false,curveSegments:8});geom.translate(0,0,-width/2);geom.rotateY(Math.PI/2);const blade=mesh(geom,m,p,[x,0,0]);blade.rotation.x=a;}}
 function gauge(p,m,x,y,z,R){c(p,m,x,y,z,R,R*.36,'z',48);c(p,material('#f5f6f3',.03,.89),x,y,z+R*.2,R*.82,2,'z',48);c(p,material('#162e48',.24,.4),x,y,z+R*.21,R*.07,4,'z',18);}
 export function makeTrainModel(type,p,d,color,source){if(!TRAIN_PARTS.some(x=>x.type===type))return false;
+ if(makeV9Model(type,p,d,color,source))return true;
  const L=d.length||900,D=d.diameter||500,H=d.height||D,W=d.width||D,carbon=material(color),steel=material('#b4c1ce'),dark=material('#344657'),brass=material('#b19863'),rubber=material('#334e58',.05,.82),accent=material('#307e90'),bolt=material('#c7d4db');
  switch(type){
  case 'train_turbine':{
