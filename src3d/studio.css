@@ -1,0 +1,49 @@
+/* Trazo Técnico — sistema de aplicación CAD V6. Compatible con tabletas. */
+.studio-project-button{border:1px solid #4298a5!important;border-radius:9px!important;background:#17627a!important;color:#f3fcff!important;font-weight:800!important;letter-spacing:.2px!important;white-space:nowrap}
+.studio-rail{position:absolute;top:74px;left:12px;z-index:10;display:flex;flex-direction:column;gap:8px;padding:7px;background:#0a2538e3;backdrop-filter:blur(12px);box-shadow:0 8px 26px #04182775;border:1px solid #356073;border-radius:14px;max-width:98px}
+.studio-rail-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:74px;min-height:63px;padding:7px 4px;border:1px solid transparent;border-radius:9px;color:#d8eef4;background:transparent;font-size:10px;font-weight:750;transition:background .18s}
+.studio-rail-btn:hover,.studio-rail-btn:focus-visible,.studio-rail-btn.active{background:#155b71;border-color:#378b9e;color:white}
+.studio-rail-icon{font-size:21px;color:#72d5cf;line-height:1.1}
+.studio-selection-hint{position:absolute;top:74px;right:15px;z-index:9;max-width:65%;display:flex;gap:7px;align-items:center;padding:6px 9px;background:#103249ec;color:#e7faff;border:1px solid #3f8294;border-radius:10px;box-shadow:0 6px 19px #0618266b;font-size:11px;flex-wrap:wrap}
+.studio-selection-hint button{border:1px solid #4e8896;background:#1b546a;border-radius:6px;color:#dff5fa;font-size:10px;padding:7px}
+.studio-backdrop{position:fixed;inset:0;z-index:201;background:#061622af;backdrop-filter:blur(3px)}
+.studio-drawer{position:fixed;right:0;top:0;bottom:0;width:min(640px,95vw);z-index:202;background:#f4f7fa;color:#173448;display:flex;flex-direction:column;box-shadow:-10px 0 50px #03101f77;border-left:1px solid #c9d9e4;font-family:Inter,system-ui,Arial,sans-serif}
+.studio-drawer.studio-wide{width:min(820px,97vw)}
+.studio-panel-head{background:linear-gradient(115deg,#142f48,#0d566b);padding:23px 26px 20px;color:#fff;display:flex;align-items:start;gap:16px;justify-content:space-between;flex-shrink:0}
+.studio-panel-head h2{font-size:23px;line-height:1.12;margin:7px 0;font-weight:790;color:white}
+.studio-panel-head p{font-size:12px;line-height:1.5;color:#c4dee6;margin:5px 0 0}
+.studio-eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:1.6px;color:#8fe0db;font-weight:850}
+.studio-close{border:1px solid #71b5c5;background:#1e5d72;color:#fff;border-radius:9px;min-width:38px;min-height:38px;font-size:18px}
+.studio-panel-body{flex:1;min-height:0;overflow:auto;padding:17px 22px 34px;display:flex;flex-direction:column;gap:15px}
+.studio-section{border:1px solid #d2e0e9;border-radius:12px;background:#fff;box-shadow:0 2px 10px #19395008;padding:16px;display:flex;flex-direction:column;gap:11px}
+.studio-section h3{margin:0;color:#1c4561;font-size:15px;font-weight:790}
+.studio-muted{color:#718697;font-size:12px;line-height:1.56;margin:0}
+.studio-warning{font-size:12px;color:#865014;background:#fff6e8;border:1px solid #ebd5af;border-radius:9px;padding:11px;line-height:1.5}
+.studio-field{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#577387;font-weight:700;min-width:0}
+.studio-field input,.studio-field select{font:inherit;color:#1a394f;background:white;border:1px solid #b8cbd9;border-radius:9px;min-height:41px;padding:8px 10px;min-width:0;width:100%;outline:0}
+.studio-field input:focus,.studio-field select:focus{border-color:#1385a0;box-shadow:0 0 0 3px #17a8ac20}
+.studio-action{border:1px solid #b4ccd8;background:#eaf2f6;color:#23526a;font-weight:770;border-radius:9px;padding:10px 13px;min-height:39px;text-align:center;font-size:12px;transition:background .13s}
+.studio-action:hover{background:#d5edf3}.studio-action.primary{color:white;background:#107b90;border-color:#107b90}.studio-action.primary:hover{background:#0c6078}
+.studio-danger{border:1px solid #edbdc0;background:#ffeff0;color:#9d363b;border-radius:9px;padding:10px;font-size:11px;font-weight:700}
+.studio-projects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.studio-project-card{border-radius:12px;border:1px solid #d1e2e8;background:#f8fbfd;padding:13px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.studio-project-card strong{font-size:13px;color:#20475b;overflow-wrap:anywhere}.studio-project-card span{font-size:11px;color:#648294}
+.studio-card-icon{width:39px;height:39px;border-radius:9px;background:#d4ebf1;color:#267b90;display:grid;place-items:center;font-size:20px}
+.studio-card-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}.studio-card-actions button{flex:1 1 auto;padding:8px 5px;min-height:36px}
+.studio-hero{background:linear-gradient(130deg,#153e55,#0d7281);color:white;border-radius:12px;padding:22px;box-shadow:0 9px 25px #092f4250}
+.studio-hero h3{font-size:22px;margin:10px 0;color:white}.studio-hero p{font-size:12px;line-height:1.55;margin:0;max-width:630px;color:#d1edf3}
+.studio-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.studio-template-card{display:flex;flex-direction:column;gap:8px;border:1px solid #d3e0e7;border-radius:13px;background:white;padding:17px}
+.studio-template-card strong{font-size:15px;color:#1d465b}.studio-template-card p{font-size:11px;color:#587789;line-height:1.5;margin:0}.studio-template-card small{font-size:10px;color:#7e90a1}.studio-template-icon{font-size:26px;display:grid;place-items:center;border:1px solid #bddce5;background:#e1f3f6;border-radius:10px;width:49px;height:49px}
+.studio-template-card button{margin-top:auto}
+.studio-tree-list{border:1px solid #dbe6ed;border-radius:10px;overflow:hidden;max-height:390px;overflow-y:auto}.studio-tree-row{padding:5px 7px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #edf1f4}.studio-tree-row:last-child{border:0}.studio-tree-row small{font-size:9px;color:#7291a1;flex-shrink:0}
+.studio-tree-select{border:0;text-align:left;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:transparent;color:#254e64;font-size:12px;padding:9px 4px}.studio-tree-select:hover{background:#e8f5f7}
+.studio-small{font-size:10px;border:1px solid #c4d8e1;color:#33738c;background:#f0f8fb;border-radius:7px;padding:6px 7px}
+.studio-inline{display:flex;gap:9px;align-items:end}.studio-inline .studio-field{flex:1}
+.studio-tool-tabs{display:flex;gap:5px;padding:9px 13px;background:#e7eef4;overflow-x:auto;flex-shrink:0}.studio-tab{border:1px solid #c7d7e3;border-radius:9px;background:#f8fbfd;color:#426b80;font-size:11px;padding:12px;white-space:nowrap;font-weight:750}.studio-tab.active{background:#176a83;color:white;border-color:#176a83}
+.studio-measure-result{padding:13px;background:#eaf7f5;border-left:4px solid #109aa4;font-size:12px;font-weight:800;color:#236777;line-height:1.5}
+.studio-bom-table{max-height:310px;overflow:auto;border:1px solid #d1e2e8;border-radius:8px}.studio-bom-table div{padding:8px 10px;border-bottom:1px solid #e3edf1;display:flex;justify-content:space-between;gap:15px;font-size:11px;color:#456579}.studio-bom-table strong{font-weight:720;color:#27495b}.studio-bom-table span{font-weight:800}
+@media(max-width:1120px){.studio-rail{top:69px}.studio-rail-btn{width:64px;min-height:57px}.studio-selection-hint{max-width:55%}}
+@media(max-width:950px){.studio-project-button{min-height:37px!important;font-size:10px!important;padding:8px 10px!important}.studio-rail{top:72px;left:8px;padding:4px;max-width:57px;gap:3px}.studio-rail-btn{width:49px;min-height:55px;font-size:9px;gap:3px;padding:5px 2px}.studio-rail-icon{font-size:19px}.studio-selection-hint{top:71px;right:8px;max-width:65%;padding:5px}.studio-selection-hint span{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+@media(max-width:720px){.studio-drawer,.studio-drawer.studio-wide{width:100vw;max-width:none}.studio-panel-head{padding:15px 17px}.studio-panel-head h2{font-size:20px}.studio-panel-body{padding:12px 12px 100px}.studio-projects,.studio-template-grid{grid-template-columns:1fr}.studio-tool-tabs{padding:8px;gap:4px}.studio-tab{font-size:10px;padding:10px 8px}.studio-section{padding:13px}.studio-selection-hint{display:none}}
+@media(max-width:420px){.studio-project-button{font-size:0!important;min-width:40px!important}.studio-project-button::after{content:'▦';font-size:21px}.studio-rail{left:5px}.studio-rail-btn{width:42px;font-size:8px}}
