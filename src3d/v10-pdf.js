@@ -1,6 +1,6 @@
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import {svg2pdf} from 'svg2pdf.js';
+import 'svg2pdf.js';
 import {billOfMaterials} from './studio-core.js';
 import {normalizeDocumentMeta,compileInspectionRows,evidenceSummary} from './v10-records.js';
 
@@ -10,7 +10,7 @@ export async function drawingSVGtoPDF(svgSource,size='A3'){
  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:size==='A4'?'a4':'a3',compress:true});
  const root=new DOMParser().parseFromString(svgSource,'image/svg+xml').documentElement;
  if(root.querySelector('parsererror'))throw Error('El SVG contiene caracteres no válidos');
- await svg2pdf(root,pdf,{x:0,y:0,width:mm[0],height:mm[1]});
+ await pdf.svg(root,{x:0,y:0,width:mm[0],height:mm[1]});
  return pdf.output('blob');
 }
 const fmt=x=>x===null||x===undefined?'—':String(x);
