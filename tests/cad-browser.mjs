@@ -13,6 +13,8 @@ try{
  page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(base);
  await page.locator('#viewport canvas').waitFor({timeout:30000});
+ await page.getByRole('button',{name:/Entrar al estudio/}).click();
+ await page.locator('.v12-more').click();
  await page.getByRole('button',{name:'Ingeniería'}).click();
  await page.getByRole('button',{name:'CAD exacto',exact:true}).click();
  const status=page.locator('.studio-cad-status');
