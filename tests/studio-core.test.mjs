@@ -10,7 +10,7 @@ test('trenes de compresión contienen conjuntos identificados y sin duplicados',
 });
 test('proyectos antiguos siguen siendo compatibles y preservan metadatos',()=>{
  const original={format:'trazo-tecnico-3d',version:5,name:'Ensayo',items:[part('pipe',0)],meta:{id:'proyecto-a',category:'Compresión',notes:'Revisión'}};
- const clean=cleanProject(original);assert.equal(clean.version,7);assert.equal(clean.meta.id,'proyecto-a');assert.equal(clean.meta.category,'Compresión');assert.equal(clean.items[0].type,'pipe');
+ const clean=cleanProject(original);assert.equal(clean.version,8);assert.equal(clean.meta.id,'proyecto-a');assert.equal(clean.meta.category,'Compresión');assert.equal(clean.items[0].type,'pipe');
  assert.throws(()=>cleanProject({format:'other',items:[]}));
 });
 test('listas de materiales agrupan piezas por tipo y parámetros',()=>{
