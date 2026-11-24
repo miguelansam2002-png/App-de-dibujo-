@@ -6,6 +6,9 @@ import {importMeshFile,booleanPieces,canBoolean} from './mesh-tools.js';
 import {createDrawingSVG,createReportHTML} from './drawings.js';
 import {CAD_SOLIDS,validateCadSpec} from './cad-schema.js';
 import {cadCreate,cadImport,cadBoolean,cadExport,cadStop} from './cad-runtime.js';
+import {CONSTRAINT_KINDS,referenceAnchors,createConstraint,solveAssembly,shiftRigidGroup,worldAnchor,descendants} from './assembly-engine.js';
+import {scanInterferences,clearanceFromBounds} from './interference-v8.js';
+import './assembly-v8.css';
 import './studio.css';
 import './cad-ui.css';
 const by=id=>document.getElementById(id);
@@ -15,11 +18,11 @@ const format=n=>Number(n||0).toLocaleString('es-ES',{maximumFractionDigits:1});
 
 export function createStudio(api){
  let current={id:uid(),category:'General',createdAt:new Date().toISOString(),notes:'',revision:'0'};
- let drawer=null,modal=null,timer=null,previewExplosion=null,measurePair=[],storeAvailable=true,activeProjectId=null;
+ let drawer=null,modal=null,timer=null,previewExplosion=null,measurePair=[],storeAvailable=true,activeProjectId=null,showRefs=false,refGroup=null;
  const root=by('viewportWrap');
  const backdrop=elm('div',{class:'studio-backdrop hidden',id:'studioBackdrop'});document.body.append(backdrop);
  const rail=elm('div',{class:'studio-rail',role:'toolbar','aria-label':'Herramientas de ingeniería'});
- const railActions=[['projects','▦','Proyectos'],['trains','⚙','Trenes'],['tools','⌘','Ingeniería'],['docs','▧','Planos']];
+ const railActions=[['projects','▦','Proyectos'],['trains','⚙','Trenes'],['assembly','⇄','Montaje'],['tools','⌘','Ingeniería'],['docs','▧','Planos']];
  const railButtons=new Map();for(const [id,icon,label] of railActions){const button=elm('button',{type:'button',class:'studio-rail-btn','aria-label':label});button.append(elm('span',{class:'studio-rail-icon'},icon),elm('span',{},label));rail.append(button);railButtons.set(id,button)}
  root.append(rail);
  const top=elm('button',{type:'button',class:'studio-project-button',title:'Abrir gestor de proyectos'},'▦  PROYECTOS');
@@ -32,7 +35,7 @@ export function createStudio(api){
  function schedulePersist(){clearTimeout(timer);timer=setTimeout(()=>{persist()},1150)}
  function snapshotMeta(){return {...current,updatedAt:new Date().toISOString()}}
  function restore(meta){if(meta&&typeof meta==='object'){current={id:safe(meta.id)||uid(),category:safe(meta.category||'General'),notes:safe(meta.notes||''),createdAt:String(meta.createdAt||new Date().toISOString()),revision:String(meta.revision||'0')};}else current={id:uid(),category:'General',notes:'',createdAt:new Date().toISOString(),revision:'0'};schedulePersist();}
- function close(){if(drawer){drawer.remove();drawer=null}if(modal){modal.remove();modal=null}backdrop.classList.add('hidden');railButtons.forEach(b=>b.classList.remove('active'));}
+ function close(){if(refGroup&&!showRefs)disposeReferences();if(drawer){drawer.remove();drawer=null}if(modal){modal.remove();modal=null}backdrop.classList.add('hidden');railButtons.forEach(b=>b.classList.remove('active'));}
  backdrop.addEventListener('click',close);
  const newPanel=(title,subtitle,wide=false)=>{
   close();backdrop.classList.remove('hidden');const panel=elm('section',{class:`studio-drawer ${wide?'studio-wide':''}`,role:'dialog','aria-modal':'true','aria-label':title});
@@ -44,7 +47,7 @@ export function createStudio(api){
  function input(parent,label,type='text',value=''){const wrap=elm('label',{class:'studio-field'});wrap.append(elm('span',{},label));const e=elm('input',{type});e.value=String(value);wrap.append(e);parent.append(wrap);return e}
  function select(parent,label,options){const wrap=elm('label',{class:'studio-field'});wrap.append(elm('span',{},label));const e=elm('select');for(const opt of options){const o=elm('option',{value:String(opt[0])},String(opt[1]));e.append(o)}wrap.append(e);parent.append(wrap);return e}
  function renderSummary(){const s=assemblySummary(api.items());const top=by('studioSelectionHint');if(!top)return;const selected=api.current();top.classList.toggle('hidden',!selected);if(selected){top.replaceChildren(elm('span',{},`◎ ${selected.name}`));const focus=action(top,'Centrar',api.focusSelected);focus.classList.add('compact');const hide=action(top,selected.hidden?'Mostrar':'Ocultar',()=>toggleHidden(selected.id));hide.classList.add('compact');}}
- function changed(){renderSummary();if(drawer?.dataset.panel==='tree')renderTree(drawer.querySelector('.studio-panel-body'));schedulePersist()}
+ function changed(){renderSummary();if(drawer?.dataset.panel==='tree')renderTree(drawer.querySelector('.studio-panel-body'));if(showRefs)refreshReferences();schedulePersist()}
  function toggleHidden(id){const p=api.items().find(x=>x.id===id);if(!p)return;api.checkpoint();p.hidden=!p.hidden;if(p.hiddenByDefault){p.hiddenByDefault=false}api.refreshScene();changed()}
  async function openProjects(){const panel=newPanel('Mis proyectos','Diseños locales almacenados en la tableta. Exporta archivos JSON como respaldo.',true);panel.dataset.panel='projects';
   const body=elm('div',{class:'studio-panel-body'});panel.append(body);
@@ -75,11 +78,118 @@ export function createStudio(api){
  }
  function explode(pieces){if(previewExplosion)restoreExploded();previewExplosion=new Map();const ids=new Set(pieces.map(p=>p.id));let i=0;for(const p of pieces){const obj=api.models.get(p.id);if(!obj||!obj.visible)continue;previewExplosion.set(p.id,obj.position.clone());const offset=(i-Math.ceil(pieces.length/2))*Math.max(170,370);obj.position.x+=offset;obj.updateMatrixWorld();i++}api.render();showToast('Vista explosionada visual · no modifica las dimensiones del proyecto')}
  function restoreExploded(){if(previewExplosion){for(const [id,pos] of previewExplosion){const obj=api.models.get(id);if(obj)obj.position.copy(pos)}previewExplosion=null;api.render()}showToast('Conjunto rearmado visualmente')}
+
+ function disposeReferences(){
+  if(!refGroup)return;
+  refGroup.traverse(node=>{node.geometry?.dispose?.();if(node.material){if(Array.isArray(node.material))node.material.forEach(x=>x.dispose?.());else node.material.dispose?.()}});
+  api.scene.remove(refGroup);refGroup=null;
+ }
+ function refreshReferences(partIds=null){
+  disposeReferences();if(!showRefs)return;
+  const active=partIds||[api.current()?.id].filter(Boolean);
+  refGroup=new THREE.Group();refGroup.name='Referencias de montaje V8';
+  for(const id of active){const part=api.items().find(x=>x.id===id);if(!part)continue;
+   const model=api.models.get(id);if(!model||!model.visible)continue;
+   const size=Math.max(15,Math.min(55,Number(part.dims?.diameter||part.dims?.width||part.dims?.length||140)*.10));
+   for(const anchor of referenceAnchors(part)){
+    if(anchor.id.startsWith('ref:')&&anchor.id!=='ref:center')continue;
+    const a=worldAnchor(part,anchor);
+    const marker=new THREE.Mesh(new THREE.SphereGeometry(size*.18,10,8),new THREE.MeshBasicMaterial({color:anchor.kind==='shaft'?0x2be2c6:anchor.kind==='end'?0xe5ad62:0x61b9f0,depthTest:false}));
+    marker.position.copy(a.position);marker.renderOrder=800;refGroup.add(marker);
+    const arrow=new THREE.ArrowHelper(a.normal,a.position,size,0x63e2d3,size*.21,size*.13);arrow.renderOrder=800;refGroup.add(arrow);
+   }
+  }
+  api.scene.add(refGroup);api.render();
+ }
+ function renderAssemblyPanel(body){
+  const pieces=api.items(),card=section(body,'Restricciones mecánicas','Selecciona dos piezas. Montaje calcula la alineación y la mantiene cuando cambia el equipo principal. Unidades: mm y grados.');
+  if(pieces.length<2){card.append(elm('p',{class:'studio-warning'},'Inserta dos piezas o abre una plantilla de tren de compresión antes de crear una unión.'));return;}
+  const opts=pieces.map(p=>[p.id,p.name]);
+  const child=select(card,'Pieza que se desplazará',opts),parent=select(card,'Pieza principal / referencia',opts);
+  const current=api.current();if(current)child.value=current.id;
+  if(parent.value===child.value){const next=pieces.find(p=>p.id!==child.value);if(next)parent.value=next.id}
+  const rule=select(card,'Tipo de relación',CONSTRAINT_KINDS.map(x=>[x.id,x.label]));
+  const desc=elm('p',{class:'studio-muted'});card.append(desc);
+  const anchors=elm('div',{class:'studio-constraint-anchors'});card.append(anchors);
+  let ownControl=null,targetControl=null;
+  function updateAnchors(){anchors.replaceChildren();
+   const c=pieces.find(x=>x.id===child.value),p=pieces.find(x=>x.id===parent.value);
+   if(!c||!p)return;
+   ownControl=select(anchors,'Referencia de la pieza',referenceAnchors(c).map(a=>[a.id,a.label]));
+   targetControl=select(anchors,'Referencia del objetivo',referenceAnchors(p).map(a=>[a.id,a.label]));
+   const candidates=referenceAnchors(c).filter(a=>a.id.startsWith('port:')&&(['shaft','end','axis'].includes(a.kind)));
+   const targets=referenceAnchors(p).filter(a=>a.id.startsWith('port:')&&(['shaft','end','axis'].includes(a.kind)));
+   if(candidates.length&&targets.length&&rule.value==='coaxial'){ownControl.value=candidates[0].id;targetControl.value=targets[targets.length-1].id}
+   else if(rule.value==='face'){ownControl.value='ref:x-';targetControl.value='ref:x+'}
+   else{ownControl.value='ref:center';targetControl.value='ref:center'}
+   desc.textContent=CONSTRAINT_KINDS.find(x=>x.id===rule.value)?.description||'';
+  }
+  child.onchange=updateAnchors;parent.onchange=updateAnchors;rule.onchange=updateAnchors;updateAnchors();
+  const controls=elm('div',{class:'studio-constraint-values'});card.append(controls);
+  const offset=input(controls,'Separación (mm)','number',0),twist=input(controls,'Giro sobre eje (°)','number',0),angle=input(controls,'Inclinación (°)','number',0);
+  [offset,twist,angle].forEach(x=>{x.step='0.5';x.min='-50000';x.max='50000'});angle.max='180';
+  const actions=elm('div',{class:'studio-inline studio-v8-actions'});card.append(actions);
+  action(actions,'Crear restricción',()=>{try{
+    const moving=pieces.find(p=>p.id===child.value),base=pieces.find(p=>p.id===parent.value);
+    if(!moving||!base||moving.id===base.id)throw Error('Selecciona piezas diferentes');
+    const mate=createConstraint(api.items(),moving.id,base.id,{kind:rule.value,ownAnchor:ownControl.value,targetAnchor:targetControl.value,offset:Number(offset.value),twist:Number(twist.value),angle:Number(angle.value)});
+    api.checkpoint();delete moving.joint;moving.constraint=mate;
+    const solved=solveAssembly(api.items());if(solved.errors.length)throw Error(solved.errors.join('; '));
+    api.refreshScene();api.selectPart(moving.id);api.focusSelected();showToast('Montaje '+rule.value+' aplicado · dependencia guardada');openTools('assembly');
+   }catch(err){showToast('No se creó la restricción: '+err.message)}},'studio-action primary');
+  action(actions,'Mostrar referencias 3D',()=>{showRefs=!showRefs;refreshReferences([child.value,parent.value]);showToast(showRefs?'Referencias 3D visibles':'Referencias ocultas')});
+  const list=section(body,'Relaciones activas','Las piezas dependientes siguen a su referencia. Puedes separarlas sin eliminar los sólidos.');
+  let total=0;for(const p of pieces){if(!p.constraint)continue;total++;
+   const target=pieces.find(x=>x.id===p.constraint.targetId),row=elm('div',{class:'studio-v8-relation'});
+   const title=elm('div',{class:'studio-v8-relation-main'});
+   title.append(elm('strong',{},p.name),elm('small',{},`${CONSTRAINT_KINDS.find(x=>x.id===p.constraint.kind)?.label||p.constraint.kind} → ${target?.name||'Referencia no encontrada'}`));row.append(title);
+   action(row,'Ver',()=>{api.selectPart(p.id);api.focusSelected();refreshReferences([p.id,target?.id].filter(Boolean))},'studio-action');
+   action(row,'Separar',()=>{api.checkpoint();delete p.constraint;api.refreshScene();showToast('Pieza desvinculada sin perder su posición');openTools('assembly')},'studio-danger');list.append(row);
+  }
+  if(!total)list.append(elm('p',{class:'studio-muted'},'Todavía no hay restricciones. Puedes conectar un eje de motor con el eje de una caja multiplicadora.'));
+  const mover=section(body,'Desplazar conjunto rígido','Mueve la bancada o el equipo principal y las piezas vinculadas seguirán su posición.');
+  const moving=select(mover,'Pieza raíz',opts);if(current)moving.value=current.id;
+  const dims=elm('div',{class:'studio-constraint-values'});mover.append(dims);
+  const dx=input(dims,'X (mm)','number',200),dy=input(dims,'Y (mm)','number',0),dz=input(dims,'Z (mm)','number',0);
+  const whole=elm('label',{class:'studio-v8-checkbox'});const check=elm('input',{type:'checkbox'});check.checked=true;whole.append(check,elm('span',{},'Mover todo el tren si pertenece a un conjunto'));mover.append(whole);
+  action(mover,'Desplazar y conservar restricciones',()=>{try{api.checkpoint();const count=shiftRigidGroup(api.items(),moving.value,[Number(dx.value),Number(dy.value),Number(dz.value)],{includeAssembly:check.checked});api.refreshScene();api.fitScene();showToast(count+' componentes desplazados')}catch(e){showToast(e.message)}},'studio-action primary');
+  const info=section(body,'Alcance técnico','Las referencias genéricas representan ejes y caras ideales. Las restricciones se guardan en el archivo JSON; no realizan cálculos de carga, flexión o tolerancia mecánica.');
+  info.append(elm('p',{class:'studio-muted'},'La V8 resuelve árboles de relaciones rígidas. Las libertades de movimiento dinámico, engranes y mecanismos articulados completos quedan para una etapa posterior.'));
+ }
+ async function renderCollisionPanel(body){
+  const opts=section(body,'Interferencias entre superficies','Busca cruces geométricos triangulares con aceleración BVH. Usa una comprobación de cajas solo para descartar pares lejanos.');
+  const tolerance=input(opts,'Tolerancia mínima para ignorar contacto superficial (mm)','number',1);tolerance.min='0';tolerance.max='100';tolerance.step='.25';
+  const chk=elm('label',{class:'studio-v8-checkbox'});const skip=elm('input',{type:'checkbox'});skip.checked=true;chk.append(skip,elm('span',{},'No evaluar piezas ya conectadas por una unión o restricción'));opts.append(chk);
+  const chk2=elm('label',{class:'studio-v8-checkbox'});const same=elm('input',{type:'checkbox'});same.checked=false;chk2.append(same,elm('span',{},'Ignorar pares del mismo tren de compresión'));opts.append(chk2);
+  const status=elm('p',{class:'studio-v8-progress',role:'status'},'Listo para analizar las piezas visibles.');opts.append(status);
+  const result=section(body,'Resultados','Cruces de superficies confirmados y casos que requieren revisión por contención o por límites de cálculo.');
+  action(opts,'Analizar interferencias 3D',async()=>{
+   status.textContent='Explorando geometría del ensamblaje…';result.replaceChildren(elm('h3',{},'Resultados'));
+   const button=opts.querySelector('button');if(button)button.disabled=true;
+   try{const report=await scanInterferences(api.items(),api.models,{tolerance:Math.max(0,Number(tolerance.value)||0),excludeConnected:skip.checked,excludeSameAssembly:same.checked,maxPairs:25000,maxNarrowTests:900,
+    onProgress:p=>status.textContent=`Analizadas ${p.seen}/${p.total} parejas · ${p.collisions} cruces · ${p.uncertain} pendientes`});
+    status.textContent=`${report.collisions.length} cruces de superficies · ${report.uncertain.length} casos por revisar · ${report.skipped} pares omitidos${report.truncated?' · informe parcial por límite':''}.`;
+    function showRows(rows,label,tone){result.append(elm('h4',{class:tone},label+' · '+rows.length));
+     if(!rows.length){result.append(elm('p',{class:'studio-muted'},'Sin resultados en esta categoría.'));return}
+     for(const row of rows.slice(0,70)){const item=elm('div',{class:'studio-v8-collision'});
+      const data=elm('div');data.append(elm('strong',{},row.nameA+' × '+row.nameB),elm('small',{},`Profundidad aprox. de envolventes: ${row.depth} mm · ${row.level}`));item.append(data);
+      action(item,'Ver A',()=>{api.selectPart(row.a);api.focusSelected()},'studio-action');
+      action(item,'Ver B',()=>{api.selectPart(row.b);api.focusSelected()},'studio-action');result.append(item)}
+    }
+    showRows(report.collisions,'Cruces de mallas','studio-v8-severe');showRows(report.uncertain,'Revisión pendiente','studio-v8-caution');
+   }catch(e){status.textContent='No se pudo completar: '+e.message;showToast(status.textContent)}finally{if(button)button.disabled=false}
+  },'studio-action primary');
+  const limitations=section(body,'Cómo interpretar la inspección','El cruce de triángulos detecta interferencias de superficies. Puede no detectar un sólido totalmente contenido dentro de otro, superficies abiertas o colisiones menores que la tolerancia.');
+  limitations.append(elm('p',{class:'studio-muted'},'No equivale a una validación dimensional, a una revisión de tolerancias o a una intersección volumétrica B-Rep. Se recomienda confirmar físicamente o mediante CAD exacto los resultados relevantes.'));
+ }
+
  function openTools(tab='tree'){
   const panel=newPanel('Herramientas de ingeniería','Selecciona, inspecciona y documenta conjuntos mecánicos.',true);panel.dataset.panel='tree';const nav=elm('div',{class:'studio-tool-tabs'});const body=elm('div',{class:'studio-panel-body'});panel.append(nav,body);
-  const tabs=[['tree','Conjuntos'],['inspect','Inspección'],['brep','CAD exacto'],['cad','CAD malla'],['measure','Medición']];
+  const tabs=[['tree','Conjuntos'],['assembly','Montaje'],['collision','Interferencias'],['inspect','Inspección'],['brep','CAD exacto'],['cad','CAD malla'],['measure','Medición']];
   function switchTab(key){nav.replaceChildren();for(const [id,label] of tabs){const b=action(nav,label,()=>switchTab(id),'studio-tab'+(id===key?' active':''));}body.replaceChildren();panel.dataset.panel=key;
    if(key==='tree'){renderTree(body);return}
+   if(key==='assembly'){renderAssemblyPanel(body);return}
+   if(key==='collision'){renderCollisionPanel(body);return}
    if(key==='inspect'){const c=section(body,'Inspección y desarme','Oculta carcasas, muestra piezas internas y separa módulos para revisión visual.');
     action(c,'Aislar pieza seleccionada',()=>{const current=api.current();if(!current){showToast('Selecciona una pieza');return}for(const p of api.items())p.hidden=p.id!==current.id;api.refreshScene();api.focusSelected()},'studio-action primary');
     action(c,'Mostrar todos',()=>{for(const p of api.items()){p.hidden=false;p.hiddenByDefault=false}api.refreshScene();showToast('Todas las piezas visibles')});
@@ -150,7 +260,7 @@ export function createStudio(api){
  }
  stepInput.addEventListener('change',async()=>{const file=stepInput.files?.[0];if(!file)return;try{showToast('Importando B-Rep STEP…');const result=await cadImport(file);const part=api.standardPart('custom_mesh',api.items().length);part.name=file.name.replace(/\.(step|stp)$/i,'').slice(0,80);part.asset=result.asset;part.pos=result.center;part.dims=result.dims;part.cad={kind:'brep',stepSource:result.stepSource,origin:result.center,spec:{kind:'importSTEP',fileName:file.name}};part.metadata={sourceFile:file.name,sourceFormat:'STEP B-Rep',validation:'SIN VERIFICAR',unit:'mm'};api.checkpoint();api.appendPart(part);api.selectPart(part.id);api.focusSelected();showToast('STEP cargado en formato B-Rep · exportación disponible');close();}catch(e){console.error(e);showToast('Error STEP: '+e.message)}finally{stepInput.value=''}});
  fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;try{showToast('Procesando modelo 3D…');const imported=await importMeshFile(file,fileInput.dataset.units||'mm');const piece=api.standardPart('custom_mesh',api.items().length);piece.name=file.name.slice(0,75);piece.asset=imported.asset;piece.pos=imported.center;piece.dims=imported.dims;piece.metadata={sourceFile:file.name,sourceFormat:imported.sourceFormat,validation:'NO VERIFICADO'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Modelo STL/GLB importado. Revisa sus unidades y geometría.')}catch(e){console.error(e);showToast('Error de importación: '+e.message)}finally{fileInput.value=''}});
- railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
+ railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('assembly').onclick=()=>openTools('assembly');railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
  window.addEventListener('keydown',e=>{if(e.key==='Escape')close();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();persist().then(()=>showToast('Proyecto guardado localmente'))}});
  renderSummary();return {snapshotMeta,restore,changed,openProjects,openTrains,openTools,openDocs,close,persist};
 }

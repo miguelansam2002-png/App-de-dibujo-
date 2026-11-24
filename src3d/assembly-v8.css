@@ -1,0 +1,33 @@
+/* Trazo Tecnico Studio V8: industrial assembly environment, touch-first. */
+.studio-constraint-anchors,.studio-constraint-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.studio-constraint-values{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:13px}
+.studio-constraint-anchors .studio-field,.studio-constraint-values .studio-field{min-width:0}
+.studio-constraint-anchors input,.studio-constraint-anchors select,.studio-constraint-values input{width:100%;min-width:0}
+.studio-v8-actions{display:flex;gap:10px;margin:14px 0 0;flex-wrap:wrap}
+.studio-v8-actions>button{flex:1 1 170px;min-height:44px}
+.studio-v8-relation,.studio-v8-collision{display:flex;gap:8px;align-items:center;padding:11px;margin:8px 0;border:1px solid #d3e0e8;border-radius:11px;background:linear-gradient(105deg,#f8fbfe,#edf4f8)}
+.studio-v8-relation-main,.studio-v8-collision>div{display:flex;flex-direction:column;flex:1;min-width:0;gap:4px}
+.studio-v8-relation strong,.studio-v8-collision strong{font-size:12px;color:#173d50;line-height:1.5;overflow-wrap:anywhere}
+.studio-v8-relation small,.studio-v8-collision small{font-size:11px;color:#4b6d7d;line-height:1.4}
+.studio-v8-relation>.studio-action,.studio-v8-relation>.studio-danger,.studio-v8-collision>.studio-action{padding:9px 10px;min-height:39px;white-space:nowrap;font-size:11px;align-self:center}
+.studio-v8-checkbox{display:flex;align-items:flex-start;gap:10px;margin:14px 0;padding:11px 13px;border-radius:10px;background:#f0f7f8;border:1px solid #c7e3e9;color:#174252;line-height:1.45;font-size:12px;font-weight:600;cursor:pointer}
+.studio-v8-checkbox input{margin:2px 0 0;width:18px;height:18px;flex:0 0 18px;accent-color:#087e8b}
+.studio-v8-progress{display:flex;align-items:center;min-height:48px;background:#ebf4f7;color:#19556b;border:1px solid #c4dce6;border-radius:10px;padding:12px;font-size:12px;font-weight:700}
+.studio-v8-severe{color:#a13d3d;font-weight:800;margin:18px 0 7px}
+.studio-v8-caution{color:#a16b24;font-weight:800;margin:18px 0 7px}
+.studio-section:has(.studio-v8-relation){padding-bottom:16px}
+.studio-tool-tabs{scrollbar-width:thin;scrollbar-color:#3c7989 transparent}
+.studio-rail-btn[aria-label='Montaje']{border:1px solid #2d6876;background:#103f52;color:#d5fcf7}
+.studio-rail-btn[aria-label='Montaje']:hover,.studio-rail-btn[aria-label='Montaje'].active{background:#16828b;color:#fff}
+@media(max-width:950px){
+ .studio-v8-actions>button{min-height:50px;font-size:12px}
+ .studio-constraint-values{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .studio-v8-relation,.studio-v8-collision{gap:7px;padding:9px;flex-wrap:wrap}
+ .studio-v8-relation-main,.studio-v8-collision>div{flex:1 1 100%;width:100%}
+ .studio-v8-relation>.studio-action,.studio-v8-relation>.studio-danger,.studio-v8-collision>.studio-action{min-height:43px;flex:1 1 auto}
+ .studio-tool-tabs{display:flex;max-width:100%;overflow-x:auto;white-space:nowrap;scroll-snap-type:x mandatory}
+ .studio-tool-tabs .studio-tab{scroll-snap-align:start;white-space:nowrap;min-height:42px}
+ .studio-rail{gap:2px}
+ .studio-rail-btn{min-height:49px}
+}
+@media(max-width:420px){.studio-constraint-anchors,.studio-constraint-values{grid-template-columns:minmax(0,1fr)}.studio-v8-checkbox{padding:10px}.studio-v8-actions{flex-direction:column}}
