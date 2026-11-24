@@ -6,6 +6,9 @@ let renderer=null,scene=null,camera=null,observer=null,run=false;
 const cache=new Map(),queue=[];
 const MAX_PREVIEW_CACHE=160;
 function setup(){
+ // Android WebView pierde el contexto principal cuando dos renderizadores WebGL compiten.
+ // En Android preservamos el visor CAD y mostramos miniaturas ligeras sin otro contexto GPU.
+ if(/Android/i.test(navigator.userAgent))return false;
  if(renderer)return true;
  try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'});
@@ -58,6 +61,7 @@ function schedule(type,element,makePart,releasePart,standardPart){
 export function bindCatalogPreviews(target,makePart,releasePart,standardPart){
  if(observer)observer.disconnect();queue.length=0;
  const cards=[...target.querySelectorAll('.part-card[data-part-type]')];
+ if(/Android/i.test(navigator.userAgent))return;
  if(typeof IntersectionObserver!=='function')return;
  observer=new IntersectionObserver(entries=>{for(const e of entries){if(!e.isIntersecting)continue;const el=e.target,icon=el.querySelector('.part-icon');if(!icon||icon.classList.contains('preview-loaded'))continue;schedule(el.dataset.partType,icon,makePart,releasePart,standardPart);observer.unobserve(el)}},{root:target,rootMargin:'50px 0px',threshold:.01});
  cards.forEach(card=>observer.observe(card));
