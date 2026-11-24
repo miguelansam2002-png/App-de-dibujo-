@@ -228,6 +228,6 @@ function start(){try{init3d()}catch(err){console.error(err);root.textContent='Es
   replaceItems:(next,name)=>{items=next.map((x,i)=>normalizePart(x,i));selected=null;joinSource=null;history=[];future=[];if(name)$('projectName').value=name;refreshScene();fitScene();refreshUndo()},
   replaceProject:(data)=>{items=data.items.map(normalizePart);selected=null;joinSource=null;history=[];future=[];$('projectName').value=String(data.name||'Proyecto 3D').slice(0,90);refreshScene();fitScene();refreshUndo()}
  });studio.restore(recoveredMeta);
- createV12Shell({catalog:CATALOG,makePart,releasePart,standardPart,addPart,studio,notify});
+ createV12Shell({catalog:CATALOG,makePart,releasePart,standardPart,addPart,studio,notify,fitScene,renderScene:render});
  status('Editor 3D V12 listo · biblioteca y estudio independientes')}
 start();
