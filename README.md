@@ -1,8 +1,15 @@
-# Trazo Técnico 3D Studio — V10
+# Trazo Técnico 3D Studio — V11
 
 Aplicación CAD 3D conceptual para ingeniería industrial, con biblioteca de 138 componentes, trenes de compresión V9, motor B-Rep/STEP V7 y ensamblajes V8. **V10 incorpora un espacio de documentación técnica** con planos, cortes, registros de inspección e informes descargables, diseñado para escritorio y tabletas Android.
 
-## Novedades de V10
+## Novedades de V11
+
+- Historial de hasta ocho puntos de recuperación por proyecto, con respaldo manual y restauración protegida por copia previa.
+- Copias automáticas previas a guardados tras un intervalo de diez minutos, sin borrar proyectos existentes.
+- Migración no destructiva de IndexedDB y conservación de planos, inspecciones y ensamblajes de V10.
+- El historial es local al dispositivo: exporta también el JSON antes de cambiar o desinstalar la aplicación.
+
+## Funciones heredadas de V10
 
 1. **Planos de ingeniería:** cuatro vistas (planta, alzado, lateral e isométrica) generadas desde las piezas 3D; hoja A3/A4 horizontal; cotas de envolvente X/Y/Z en mm, referencias numeradas y cajetín con código de proyecto, documento, revisión, responsables y fecha.
 2. **Secciones geométricas:** permite elegir plano de corte normal a X, Y o Z y una coordenada de corte en milímetros. Calcula segmentos de intersección con las superficies trianguladas.
