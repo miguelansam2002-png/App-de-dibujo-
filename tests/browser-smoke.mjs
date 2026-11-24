@@ -72,7 +72,7 @@ try{
   assert.ok(await page.getByText('Conjuntos', {exact:true}).first().isVisible());
   await page.getByRole('button',{name:'Planos'}).click();
   assert.ok(await page.getByText('Exportar plano A3 (SVG)').isVisible());
-  await page.getByRole('button',{name:'Proyectos'}).click();
+  await page.getByRole('button',{name:'Proyectos',exact:true}).click();
   assert.ok(await page.getByText('Mis proyectos', {exact:true}).isVisible());
   await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
