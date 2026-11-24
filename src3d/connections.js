@@ -27,6 +27,11 @@ export function portsFor(part){
   const thick=Number(d.thickness||12),x=thick/2;
   return [mk('A','Cara A',-x,-1,diameter),mk('B','Cara B',x,1,diameter)];
  }
+ if(['train_turbine','train_motor','train_gearbox','train_compressor','train_compressor_axial','train_coupling','train_rotor'].includes(t)){
+  const y=t==='train_motor'?Number(d.height||1200)*.04:t.startsWith('train_compressor')?Number(d.height||1600)*.06:t==='train_turbine'?Number(d.height||1600)*.14:0;
+  return [P('shaftA','Eje lado A','shaft',[-L/2,y,0],[-1,0,0],175),P('shaftB','Eje lado B','shaft',[L/2,y,0],[1,0,0],175)];
+ }
+ if(t==='train_nozzle')return [mk('A','Boca de boquilla',-L/2,-1,D),mk('B','Cara de brida',L/2,1,D)];
  if(t==='cap')return [P('A','Boca abierta','end',[-L*.515,0,0],[-1,0,0],D)];
  if(['clamp_u','clamp_u_saddle'].includes(t))return [P('mount','Centro de grapa','mount',[0,Number(d.height||205)/2-Number(d.width||132)/2,0],[0,0,1],Number(d.width||132))];
  if(['clamp_omega','clamp_band'].includes(t))return [P('mount','Centro de arco','mount',[0,-Number(d.height||115)*.35,0],[0,0,1],Number(d.width||132))];
@@ -35,6 +40,7 @@ export function portsFor(part){
 }
 
 export function compatiblePorts(a,b){
+ if(a.kind==='shaft'&&b.kind==='shaft')return Math.abs(a.diameter-b.diameter)<=Math.max(10,Math.max(a.diameter,b.diameter)*.35);
  if(a.kind==='end'&&b.kind==='end')return Math.abs(a.diameter-b.diameter)<=Math.max(4,Math.max(a.diameter,b.diameter)*.075);
  if(a.kind==='mount'&&b.kind==='axis')return a.diameter>=b.diameter*.9&&a.diameter<=b.diameter*2.5;
  if(a.kind==='axis'&&b.kind==='mount')return b.diameter>=a.diameter*.9&&b.diameter<=a.diameter*2.5;
@@ -52,7 +58,7 @@ export function calculateJointTransform(moving,own,target,other){
  const tw=worldPort(target,other),movingQ=partQ(moving);
  const movingNormal=vec(own.normal).applyQuaternion(movingQ).normalize();
  // En los anclajes de abrazaderas, el eje se alinea en el mismo sentido; para extremos, en el contrario.
- const desired=tw.normal.clone().multiplyScalar(own.kind==='end'?-1:1);
+ const desired=tw.normal.clone().multiplyScalar(['end','shaft'].includes(own.kind)?-1:1);
  const delta=new THREE.Quaternion().setFromUnitVectors(movingNormal,desired);
  const q=delta.multiply(movingQ).normalize();
  const pos=tw.position.clone().sub(vec(own.position).applyQuaternion(q));

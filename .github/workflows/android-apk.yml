@@ -1,4 +1,4 @@
-name: Trazo Tecnico 3D V5 - APK de prueba
+name: Trazo Tecnico 3D Studio V6 - APK de prueba
 on:
   push:
     branches: [main]
@@ -8,7 +8,7 @@ permissions:
 jobs:
   android-debug-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Publicar version web para pruebas
         uses: actions/upload-artifact@v4
         with:
-          name: TrazoTecnico3D-Web-V5
+          name: TrazoTecnico3D-Studio-V6-Web
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -47,7 +47,7 @@ jobs:
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
-          name: TrazoTecnico3D-V5-APK-debug
+          name: TrazoTecnico3D-Studio-V6-APK-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

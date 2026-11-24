@@ -20,10 +20,10 @@ try{
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
-  assert.equal(await page.locator('.part-card').count(),99,'El catálogo debe mostrar 99 componentes');
-  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V5 listo'),true);
+  assert.equal(await page.locator('.part-card').count(),120,'El catálogo debe mostrar 120 componentes disponibles');
+  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V6 listo'),true);
   await page.waitForTimeout(600);
-  assert.ok(await page.locator('.part-card[data-part-type]').count()===99,'Cada tarjeta debe ofrecer identificador');
+  assert.ok(await page.locator('.part-card[data-part-type]').count()===120,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
   await page.locator('#librarySearch').fill('omega');
   assert.equal(await page.locator('.part-card').count(),1);
@@ -60,6 +60,20 @@ try{
   await tablet.locator('#dockLibrary').click();
   assert.ok(await tablet.locator('#libraryPanel').evaluate(el=>el.classList.contains('open')));
   await tablet.waitForTimeout(340);await tablet.screenshot({path:'qa-screenshots/tablet-library.png'});
+  // Flujos reales de la nueva capa Studio, sin necesidad de navegador Android real.
+  await page.getByRole('button',{name:'Trenes'}).click();
+  assert.equal(await page.locator('.studio-template-card').count(),3);
+  await page.screenshot({path:'qa-screenshots/studio-trains.png'});
+  page.on('dialog',dialog=>dialog.accept());
+  await page.locator('.studio-template-card .studio-action.primary').first().click();
+  assert.ok(Number(await page.locator('#elementCount').innerText())>=10,'Debe insertar un tren completo');
+  await page.getByRole('button',{name:'Ingeniería'}).click();
+  assert.ok(await page.getByText('Conjuntos', {exact:true}).first().isVisible());
+  await page.getByRole('button',{name:'Planos'}).click();
+  assert.ok(await page.getByText('Exportar plano A3 (SVG)').isVisible());
+  await page.getByRole('button',{name:'Proyectos'}).click();
+  assert.ok(await page.getByText('Mis proyectos', {exact:true}).isVisible());
+  await page.locator('.studio-close').click();
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
-  console.log('Pruebas UI V4: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
+  console.log('Pruebas UI V6: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}

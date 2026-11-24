@@ -1,14 +1,14 @@
 {
   "name": "trazo-tecnico-3d",
   "private": true,
-  "version": "5.0.0",
+  "version": "6.0.0",
   "type": "module",
-  "description": "Trazo Tecnico 3D: biblioteca industrial parametrica e interaccion tactil",
+  "description": "Trazo Tecnico 3D Studio: proyectos locales, trenes de compresion, importacion malla, CSG experimental, planos y BOM",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js && node --check src3d/premium-models.js && node --check src3d/catalog-previews.js",
+    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js && node --check src3d/premium-models.js && node --check src3d/catalog-previews.js && node --check src3d/studio.js && node --check src3d/studio-core.js && node --check src3d/train-models.js && node --check src3d/train-presets.js && node --check src3d/mesh-tools.js && node --check src3d/drawings.js && node --check src3d/project-store.js",
     "android:add": "npm run build && npx cap add android",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
@@ -19,7 +19,9 @@
     "@capacitor/core": "^8.0.0",
     "@capacitor/filesystem": "^8.0.0",
     "@capacitor/share": "^8.0.0",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "three-bvh-csg": "^0.0.18",
+    "three-mesh-bvh": "^0.9.7"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.0",
