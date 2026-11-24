@@ -13,19 +13,24 @@ try{
  await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:30000});await page.getByRole('heading',{name:'¿Qué deseas hacer?'}).waitFor();
  assert.ok(await page.getByRole('button',{name:/Explorar biblioteca/}).isVisible());
  assert.ok(await page.getByRole('button',{name:/Entrar al estudio/}).isVisible());
- await page.screenshot({path:'qa-screenshots/v12-inicio.png'});
- await page.getByRole('button',{name:/Explorar biblioteca/}).click();
+ await page.screenshot({path:'qa-screenshots/v13-inicio.png'});
+ await page.locator('.v13-shell-link').filter({hasText:'Proyectos'}).click();
+ await page.getByRole('heading',{name:'Tus proyectos y modelos preparados'}).waitFor();
+ assert.equal(await page.locator('.v13-project-card').count(),3,'Tres modelos de tren de compresión prediseñados');
+ await page.screenshot({path:'qa-screenshots/v13-proyectos.png'});
+ await page.locator('.v13-shell-link').filter({hasText:'Biblioteca 3D'}).click();
+ 
  await page.getByRole('heading',{name:'Explora antes de diseñar'}).waitFor();
  assert.equal(await page.locator('.v12-model-card').count(),138,'La biblioteca V12 debe ofrecer 138 componentes');
  assert.equal(await page.locator('#elementCount').innerText(),'1','Consultar la biblioteca no debe modificar el proyecto');
  await page.locator('.v12-search').fill('omega');
  assert.equal(await page.locator('.v12-model-card').count(),1);
- await page.screenshot({path:'qa-screenshots/v12-biblioteca.png'});
+ await page.screenshot({path:'qa-screenshots/v13-biblioteca.png'});
  await page.locator('.v12-model-card .v12-model-add').first().click();
  assert.ok(await page.locator('body').evaluate(el=>el.classList.contains('v12-design')),'Seleccionar Usar abre el estudio');
  assert.equal(await page.locator('#elementCount').innerText(),'2','Agregar pieza produce un nuevo componente');
  assert.ok((await page.locator('#selectedType').innerText()).includes('GRAPA OMEGA'));
- await page.screenshot({path:'qa-screenshots/v12-estudio.png'});
+ await page.screenshot({path:'qa-screenshots/v13-estudio.png'});
  await page.getByRole('button',{name:/Propiedades/}).first().click();
  assert.ok(await page.locator('#inspectorPanel').isVisible());
  await page.getByRole('button',{name:/Añadir pieza/}).click();
@@ -37,6 +42,8 @@ try{
  assert.ok(await page.locator('.v12-quick').isVisible(),'La barra principal debe permanecer operativa');
  await page.locator('.v12-quick-btn').filter({hasText:'Guardar'}).click();
  await page.locator('.v12-more').click();
+ assert.ok(await page.locator('.v13-tool-palette').isVisible(),'Menú de diseño contextual');
+ await page.locator('.v13-tool').filter({hasText:'Herramientas avanzadas'}).click();
  assert.ok(await page.locator('.studio-rail').isVisible(),'El modo avanzado debe mostrar las herramientas CAD');
  await page.getByRole('button',{name:'Planos',exact:true}).click();
  assert.ok(await page.getByText('Planos, cortes e informes de ingeniería').isVisible());
@@ -46,7 +53,7 @@ try{
  assert.ok(await tablet.getByRole('button',{name:/Entrar al estudio/}).isVisible());
  await tablet.getByRole('button',{name:/Entrar al estudio/}).click();
  assert.ok(await tablet.locator('.v12-quick').isVisible());
- await tablet.screenshot({path:'qa-screenshots/v12-tableta.png'});
+ await tablet.screenshot({path:'qa-screenshots/v13-tableta.png'});
  assert.deepEqual(errors,[],'Sin errores de JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Sin errores JavaScript en tableta');
- console.log('V12: inicio, catálogo independiente, edición, herramientas avanzadas y tableta OK');
+ console.log('V13: inicio, catálogo independiente, edición, herramientas avanzadas y tableta OK');
 }finally{await browser?.close();server.kill('SIGTERM')}
