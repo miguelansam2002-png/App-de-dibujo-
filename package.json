@@ -1,14 +1,14 @@
 {
   "name": "trazo-tecnico-3d",
   "private": true,
-  "version": "8.0.0",
+  "version": "9.0.0",
   "type": "module",
-  "description": "Trazo Tecnico 3D Studio V8 - restricciones mecanicas y deteccion de interferencias con BVH",
+  "description": "Trazo Tecnico 3D Studio V9: trenes de compresion detallados, inspeccion y fichas mecanicas",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js && node --check src3d/premium-models.js && node --check src3d/catalog-previews.js && node --check src3d/studio.js && node --check src3d/studio-core.js && node --check src3d/train-models.js && node --check src3d/train-presets.js && node --check src3d/mesh-tools.js && node --check src3d/drawings.js && node --check src3d/project-store.js && node --check src3d/cad-schema.js && node --check src3d/cad-runtime.js && node --check src3d/cad-worker.js && node --check src3d/assembly-engine.js && node --check src3d/interference-v8.js",
+    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js && node --check src3d/premium-models.js && node --check src3d/catalog-previews.js && node --check src3d/studio.js && node --check src3d/studio-core.js && node --check src3d/train-models.js && node --check src3d/train-presets.js && node --check src3d/mesh-tools.js && node --check src3d/drawings.js && node --check src3d/project-store.js && node --check src3d/cad-schema.js && node --check src3d/cad-runtime.js && node --check src3d/cad-worker.js && node --check src3d/assembly-engine.js && node --check src3d/interference-v8.js && node --check src3d/v9-compressor-models.js && node --check src3d/v9-technical.js && node --check src3d/v9-workshop.js",
     "android:add": "npm run build && npx cap add android",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
