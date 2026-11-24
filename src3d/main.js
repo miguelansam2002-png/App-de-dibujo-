@@ -96,7 +96,7 @@ function addPart(type){if(items.length>=MAX_ITEMS){notify('Límite de '+MAX_ITEM
  if(items.length){const reference=models.get(selected)||modelRoot;const bounds=new THREE.Box3().setFromObject(reference);const temp=makePart(part);const pbox=new THREE.Box3().setFromObject(temp),size=pbox.getSize(new THREE.Vector3());releasePart(temp);
   const referenceCenter=bounds.getCenter(new THREE.Vector3());part.pos=[Math.ceil((bounds.max.x+size.x*.5+Math.max(50,s*3))/s)*s,Math.round(referenceCenter.y/s)*s,Math.round(referenceCenter.z/s)*s];
  }else{part.pos=[Math.round(controls.target.x/s)*s,Math.round(controls.target.y/s)*s,Math.round(controls.target.z/s)*s]}
- const target=items.find(x=>x.id===selected);
+ const target=items.find(x=>x.id===selected)||(items.length===1?items[0]:null);
  let joined=false;
  if(target&&$('autoConnect')?.checked){const j=createJoint(part,target);if(j){part.joint={targetId:j.targetId,selfPort:j.selfPort,targetPort:j.targetPort};part.pos=j.transform.pos;part.rot=j.transform.rot;joined=true}}
  items.push(part);refreshScene();selectPart(part.id);focusSelected();
@@ -201,7 +201,7 @@ function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color('#132
    group.rotation.set(...data.rot.map(THREE.MathUtils.degToRad));snapMarker.visible=false;
    status('Moviendo · X '+data.pos[0]+' · Y '+data.pos[1]+' · Z '+data.pos[2]+' mm');
   }
-  ['X','Y','Z'].forEach((axis,i)=>{ $('pos'+axis).value=data.pos[i];$('rot'+axis).value=data.rot[i]});render();
+  ['X','Y','Z'].forEach((axis,i)=>{ $('pos'+axis).value=data.pos[i];$('rot'+axis).value=data.rot[i]});if(items.some(x=>x.joint?.targetId===drag.id))syncModels();else render();
  });
  function endDrag(e){touches.delete(e.pointerId);if(!drag||drag.pointerId!==e.pointerId){if(!touches.size&&interactionMode!=='rotate')controls.enabled=true;return}
   const old=drag.original,moved=drag.moved,candidate=drag.candidate,id=drag.id;drag=null;controls.enabled=true;snapMarker.visible=false;
@@ -214,5 +214,5 @@ function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color('#132
  const resize=new ResizeObserver(()=>{const w=root.clientWidth,h=root.clientHeight;if(w<1||h<1)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);render()});resize.observe(root);
  (function tick(){requestAnimationFrame(tick);controls.update()})();
 }
-function start(){try{init3d()}catch(err){console.error(err);root.textContent='Este dispositivo necesita WebGL compatible para mostrar modelos 3D. Actualiza Android System WebView.';notify('No se pudo iniciar el visor 3D');return}setupEvents();populatePresets();populateCatalog();try{const saved=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY)||'null');if(saved?.format==='trazo-tecnico-3d'&&Array.isArray(saved.items)&&saved.items.length<=MAX_ITEMS){items=saved.items.map(normalizePart);$('projectName').value=String(saved.name||'Diseño 3D').slice(0,90)}}catch(e){console.warn('No se pudo recuperar el guardado local',e)}if(!items.length){const part=standardPart('pipe');part.pos=[0,0,0];items=[part]}refreshScene();fitScene();refreshUndo();status('Editor 3D V4 listo · une piezas automáticamente desde la biblioteca')}
+function start(){try{init3d()}catch(err){console.error(err);root.textContent='Este dispositivo necesita WebGL compatible para mostrar modelos 3D. Actualiza Android System WebView.';notify('No se pudo iniciar el visor 3D');return}setupEvents();populatePresets();populateCatalog();try{const saved=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY)||'null');if(saved?.format==='trazo-tecnico-3d'&&Array.isArray(saved.items)&&saved.items.length<=MAX_ITEMS){items=saved.items.map(normalizePart);$('projectName').value=String(saved.name||'Diseño 3D').slice(0,90)}}catch(e){console.warn('No se pudo recuperar el guardado local',e)}if(!items.length){const part=standardPart('pipe');part.pos=[0,0,0];items=[part]}selected=items.at(-1)?.id||null;refreshScene();fitScene();refreshUndo();status('Editor 3D V4 listo · une piezas automáticamente desde la biblioteca')}
 start();
