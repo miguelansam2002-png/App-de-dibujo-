@@ -60,3 +60,16 @@ body{background:#131b25;color:#edf1f4}
 .v13-shell-link.active{background:#a66c39;border-color:#d3a371;color:#fff}
 .v13-shell-link:hover{border-color:#c69a66;background:#465464;color:#fff}
 @media(max-width:650px){.v13-shell-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin-bottom:23px;width:100%}.v13-shell-link{padding:10px 3px;font-size:10px}}
+
+/* V13.1: evitar menus duplicados en el estudio y dar prioridad al lienzo 3D. */
+body.v12-design .v12-home-button,
+body.v12-design .studio-project-button{display:none!important}
+body.v12-design .topbar{gap:12px;min-width:0}
+body.v12-design .top-actions{gap:5px;flex-shrink:0}
+body.v12-design .top-actions>button{min-height:36px;white-space:nowrap}
+body.v12-design .viewport-wrap{isolation:isolate;min-height:300px}
+body.v12-design .viewport{min-height:300px}
+body.v12-design #viewport canvas{background:#293441;display:block}
+body.v12-design .viewport-hud{z-index:4}
+@media(max-width:1150px){body.v12-design .brand{min-width:130px}body.v12-design .v12-nav{flex:1;min-width:0;justify-content:flex-start;overflow-x:auto}body.v12-design .v12-nav-button{padding:9px 8px}}
+@media(max-width:950px){body.v12-design .v12-nav{display:flex;max-width:100%;gap:2px}body.v12-design .v12-nav-button{font-size:10px}body.v12-design .top-actions #btnNew,body.v12-design .top-actions #btnOpen{display:none}}
