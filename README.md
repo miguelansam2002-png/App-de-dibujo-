@@ -1,52 +1,38 @@
-# Trazo Técnico 3D Studio V8 — Ensamblajes mecánicos
+# Trazo Técnico 3D Studio V9 — Compresión industrial
 
-Aplicación de modelado técnico 3D para escritorio y tabletas Android. La **V8** construye sobre el módulo CAD B-Rep/STEP de la V7 e incorpora restricciones mecánicas editables, movimiento de conjuntos y un detector de interferencias entre superficies.
+Aplicación CAD 3D para bocetos y ensamblajes conceptuales. La **V9** conserva el motor B-Rep/STEP de V7 y las restricciones de V8 e incorpora un taller de compresión con modelos mecánicos individuales, configuraciones de rotores y registro técnico por componente.
 
-## Nuevas herramientas V8
+## Novedades V9
 
-### 1. Montaje y restricciones
+- **138 componentes de biblioteca**: 120 anteriores y 18 nuevos modelos mecánicos V9.
+- **Carcasas** superior e inferior desmontables, carcasa barril, pestañas, tapas y bulonería.
+- **Rotor:** eje escalonado, impulsores abiertos y cerrados con álabes, diafragmas por etapa, balance, laberintos y plato de empuje.
+- **Sistemas auxiliares:** cojinetes de zapatas, housing, cartuchos conceptuales de sellos secos, acoples de diafragma, guarda, sensor axial.
+- **Tres configuradores V9:** rotor por etapas; compresor de carcasa partida; tren completo con motor, caja de engranajes, compresor y auxiliares.
+- Parámetros: de **1 a 10 etapas**, diámetro del impulsor, diámetro del eje y longitud del rotor (mm).
+- **Inspección por subsistemas:** mostrar/ocultar, despiece visual, aislamiento y selección de piezas sin alinearlas manualmente.
+- **Fichas de trazabilidad:** fabricante, P/N, S/N, dibujo/manual/página, revisión, material, observaciones, fuente, revisor y fecha. Exportación de registro CSV con protección ante fórmulas de hoja de cálculo.
+- Conservar proyectos JSON/IndexedDB, importación/exportación STEP de piezas B-Rep, restricciones de montaje y control de interferencias BVH.
 
-Pulsa **Montaje** (barra lateral) o **Ingeniería → Montaje**.
+## Uso rápido en una tableta
 
-1. Selecciona la **pieza que se desplazará**.
-2. Selecciona la **pieza principal** (referencia).
-3. Elige el tipo de relación:
-   - **Fijación rígida:** guarda posición y orientación relativas, útil para bases y equipos auxiliares.
-   - **Ejes concéntricos:** enfrenta y alinea referencias de ejes; permite ajustar separación axial y giro.
-   - **Caras coincidentes:** alinea dos caras enfrentadas con separación configurable.
-   - **Ejes paralelos:** conserva referencias paralelas.
-   - **Separación fija:** mantiene desplazamiento definido respecto al objetivo.
-   - **Ángulo de montaje:** incluye inclinación respecto a un eje de referencia.
-4. Elige sus **referencias geométricas**: caras ±X/±Y/±Z, origen local, bocas de tubería, extremos o ejes de motor/compresor cuando existan.
-5. Pulsa **Crear restricción**. El conjunto se actualiza sin introducir coordenadas manuales.
-6. **Mostrar referencias 3D** visualiza las direcciones de montaje. **Separar** elimina una restricción sin borrar la pieza.
+1. En la barra lateral pulsa **Equipos**, o **Ingeniería → Compresión V9**.
+2. Selecciona una plantilla y configura etapas, diámetro del impulsor, eje y longitud.
+3. Pulsa **Crear conjunto detallado**.
+4. Abre **Despiece e inspección** y escoge carcasa, rotor, etapas, cojinetes, sellos, transmisión o auxiliares.
+5. Usa **Mostrar internos**, **Ver todo**, **Despiece visual** y **Rearmar**.
+6. En **Ficha técnica**, selecciona una pieza, registra datos solo con documentación original y pulsa **Guardar ficha técnica**.
+7. Exporta el registro de piezas en CSV y guarda periódicamente una copia JSON del proyecto.
 
-Las restricciones se guardan en JSON y en el gestor offline de proyectos. Al mover o girar la pieza principal, sus componentes dependientes se recalculan. Una pieza que el usuario mueve manualmente por separado se desvincula para evitar comportamientos inesperados. Se rechazan relaciones circulares.
+## Alcance de las referencias
 
-### 2. Desplazar conjuntos
+- [Siemens Energy — Single-shaft centrifugal compressors](https://www.siemens-energy.com/global/en/home/products-services/product/single-shaft-centrifugal-compressors.html): información pública sobre configuraciones, carcasas y etapas.
+- [Siemens Energy — Dry gas seals](https://www.siemens-energy.com/global/en/home/products-services/product/dry-gas-seals.html): principios y configuraciones de sellos.
+- [API — Source Inspector study guide](https://www.api.org/~/media/files/certification/icp/icp-certification-programs/si_suite_documents/sire/sire_study%20guide_20181002.pdf): referencia de inspección mecánica; las normas originales requieren consulta y licencia aplicables.
 
-En **Montaje → Desplazar conjunto rígido**, introduce X/Y/Z en mm. Puedes desplazar el tren entero o únicamente la pieza raíz y sus dependientes, manteniendo las relaciones.
+**No se han copiado modelos CAD de fabricantes ni asignado números de parte ficticios.** La geometría y las dimensiones predeterminadas son originales y **conceptuales**. No equivalen al modelo 462B 4/3 ni a otra máquina particular. Para reproducir un compresor específico se necesitan planos aprobados, dimensiones, P/N/S/N correctos, revisiones y autorización de su propietario/fabricante.
 
-### 3. Interferencias 3D
-
-Abre **Ingeniería → Interferencias**. Define la tolerancia en mm y si deseas excluir piezas ya conectadas o pertenecientes al mismo tren.
-
-El analizador aplica:
-- **Fase 1:** descarte de pares separados mediante cajas envolventes AABB.
-- **Fase 2:** comprobación de intersección de superficies trianguladas con **three-mesh-bvh**, sobre las mallas reales y sus transformaciones 3D.
-- **Resultados:** cruces de superficies confirmados y casos de contención/lectura incompleta que necesitan validación.
-
-Puedes tocar **Ver A** o **Ver B** para ubicar las piezas sospechosas en el diseño.
-
-**Limitación importante:** el detector comprueba intersecciones de superficies de malla, **no** intersección volumétrica exacta con OpenCascade. Un sólido totalmente contenido en otro, geometrías abiertas o contactos menores que la tolerancia requieren inspección adicional. La profundidad indicada se estima por las cajas envolventes, no representa la penetración exacta entre superficies.
-
-## Funciones que se mantienen
-
-- 120 componentes paramétricos de biblioteca, grapas, tuberías, soportes y equipos.
-- Tres plantillas conceptuales de trenes de compresión y vistas de inspección/desarme.
-- CAD B-Rep V7: STEP/STP individual, bloques, placas perforadas, cilindros, tubos y booleanas exactas de piezas compatibles.
-- Proyectos offline con IndexedDB, copias JSON, exportación de imágenes, STL/GLB, plano visual A3, CSV de materiales e informe HTML.
-- Android con Capacitor, diseño adaptable y operación táctil.
+La condición de ficha **«Contrastado»** requiere número de parte, referencia de plano, revisor y fecha, pero no implica certificación por OEM ni autorización para fabricación.
 
 ## Desarrollo
 
@@ -58,18 +44,14 @@ npm run build
 npm run dev
 ```
 
-La acción `.github/workflows/android-apk.yml` compila el APK Android **debug** a partir del mismo código. Node.js 22+ y Android SDK cuando se compila localmente.
+GitHub Actions genera la APK debug de Android mediante Capacitor. La aplicación permite visualizar y modificar los diseños offline; los enlaces a documentos públicos necesitan internet.
 
-Pruebas nuevas: `tests/assembly-v8.test.mjs` valida restricciones, ciclos, traslaciones y detección de cruces de malla; `tests/browser-smoke.mjs` verifica navegación, creación de restricciones y panel de interferencias.
+## Límites
 
-## Limitaciones y próximos pasos
+- El despiece es **visual**: no valida secuencias reales de desmontaje o seguridad.
+- Los modelos V9 de impelentes, carcasas y ejes son mallas paramétricas. **No son sólidos B-Rep de fabricación**. El módulo B-Rep de V7 se mantiene para crear/importar piezas STEP.
+- Los planos A3, cotas y tolerancias son preliminares: comprueba planos OEM y criterios de inspección antes de fabricar o montar.
+- No subas datos operacionales, manuales confidenciales ni seriales reales a un repositorio público.
+- V10: documentación técnica, planos y reportes de desarme. V11: app Android firmada de producción y pruebas en tabletas físicas.
 
-- **Los anclajes genéricos no son referencias certificadas de fabricante**. Las cotas y las conexiones deben verificarse con planos autorizados antes de fabricar o montar.
-- Las restricciones V8 resuelven árboles de relaciones rígidas y parámetros simples. **No** incorporan un solucionador general de mecanismos con grados de libertad, juntas cinemáticas articuladas ni análisis de esfuerzos.
-- STEP se conserva a nivel de pieza B-Rep; no hay STEP de ensamblaje multinivel.
-- La medición de interferencias no reemplaza una revisión de tolerancias, análisis dimensional o verificación geométrica B-Rep.
-- V9: trenes de compresión con geometrías y referencias de fabricante autorizadas.
-- V10: planos ortogonales y cortes acotados, documentación formal y secuencias de desarme.
-- V11: instalador firmado estable, pruebas en tabletas físicas y recuperación robusta de proyectos.
-
-**Respaldo:** exporta siempre tus proyectos JSON antes de sustituir o desinstalar la APK, porque Android puede borrar los datos locales. La versión 2D autónoma sigue disponible en `standalone/TrazoTecnico_v1.html`.
+Editor 2D original: `standalone/TrazoTecnico_v1.html`.
