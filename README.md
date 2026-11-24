@@ -6,7 +6,7 @@ Aplicación CAD 3D conceptual para ingeniería industrial, con biblioteca de 138
 
 1. **Planos de ingeniería:** cuatro vistas (planta, alzado, lateral e isométrica) generadas desde las piezas 3D; hoja A3/A4 horizontal; cotas de envolvente X/Y/Z en mm, referencias numeradas y cajetín con código de proyecto, documento, revisión, responsables y fecha.
 2. **Secciones geométricas:** permite elegir plano de corte normal a X, Y o Z y una coordenada de corte en milímetros. Calcula segmentos de intersección con las superficies trianguladas.
-3. **Exportación vectorial:** SVG, PDF (jsPDF + svg2pdf.js) y DXF en mm. El DXF entrega proyecciones de envolventes y anotaciones preliminares; no es un DXF completo de fabricación.
+3. **Exportación vectorial:** SVG, PDF (jsPDF con trazado vectorial directo) y DXF en mm. El DXF entrega proyecciones de envolventes y anotaciones preliminares; no es un DXF completo de fabricación.
 4. **Vista explosionada para documentación:** usar el despiece visual existente antes de actualizar y exportar el plano.
 5. **Inspecciones por pieza:** fecha, inspector, tipo, ubicación, medición, nominal, límites inferior/superior, unidad, criterio/referencia, resultado elegido, hallazgo, recomendación y fotografía opcional comprimida. Los datos se almacenan en `metadata.inspections` de cada componente.
 6. **Informe técnico en HTML/PDF:** portada, identificación del proyecto, resumen, tabla de componentes, trazabilidad de datos de V9, observaciones de inspección y firmas documentales. El informe HTML admite anexos fotográficos; el PDF incluye tablas y observaciones (las fotos quedan en la versión HTML).
@@ -46,7 +46,7 @@ npm run dev
 
 El workflow `.github/workflows/android-apk.yml` compila el APK Android con Capacitor. El workflow `.github/workflows/ui-visual.yml` comprueba navegación en escritorio/tableta, el modelador V7, el taller V9 y el espacio V10. Las pruebas de `tests/v10-engineering.test.mjs` comprueban geometría, proyecciones, sección, trazabilidad, CSV e informe PDF.
 
-Licencias principales de terceros: Three.js, jsPDF, svg2pdf.js y jspdf-autotable (MIT), junto con RepliCAD/OpenCascade.js, sujeto a los avisos del proyecto y a obligaciones LGPL aplicables para distribuciones.
+Licencias principales de terceros: Three.js, jsPDF y jspdf-autotable (MIT), junto con RepliCAD/OpenCascade.js, sujeto a los avisos del proyecto y a obligaciones LGPL aplicables para distribuciones.
 
 ## Etapas siguientes
 
