@@ -105,7 +105,14 @@ try{
   assert.equal(v9.items.filter(x=>x.type==='v9_impeller_closed').length,3);
   assert.ok(v9.items.some(x=>x.type==='v9_casing_upper'));
   assert.ok(await page.getByText('Ficha técnica de componente').isVisible());
+  await page.locator('.studio-close').click();
+  await page.waitForTimeout(350);
+  await page.screenshot({path:'qa-screenshots/tren-detallado-v9.png'});
+  await page.locator('.studio-rail-btn[aria-label="Equipos"]').click();
+  await page.getByText('2. Despiece e inspección').scrollIntoViewIfNeeded();
   await page.screenshot({path:'qa-screenshots/despiece-v9.png'});
+  await page.getByText('3. Ficha técnica de componente').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'qa-screenshots/ficha-v9.png'});
   await page.getByRole('button',{name:'Guardar ficha técnica'}).click();
   await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
