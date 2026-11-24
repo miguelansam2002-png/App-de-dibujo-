@@ -60,6 +60,18 @@ try{
  assert.ok(await tablet.locator('.v12-quick').isVisible());
  await tablet.getByRole('button',{name:'Biblioteca 3D',exact:true}).first().click().catch(()=>{});
  await tablet.screenshot({path:'qa-screenshots/v13-tableta.png'});
+ // Regression: Android catalog -> select part -> CAD must draw actual geometry, not a blank dark viewport.
+ const android=await browser.newPage({viewport:{width:1080,height:675},hasTouch:true,isMobile:true,deviceScaleFactor:1,userAgent:'Mozilla/5.0 (Linux; Android 15; Pixel Tablet) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36'});
+ const androidErrors=[];android.on('pageerror',e=>androidErrors.push(String(e)));
+ await android.goto(base);await android.locator('#viewport canvas').waitFor({timeout:30000});
+ await android.getByRole('button',{name:/Explorar biblioteca/}).click();
+ await android.locator('.v12-model-card .v12-model-add').first().click();
+ await android.waitForFunction(()=>document.querySelector('body')?.classList.contains('v12-design')&&(document.querySelector('#elementCount')?.textContent||'')==='2',null,{timeout:20000});
+ await android.waitForTimeout(500);
+ const visiblePixels=await android.locator('#viewport canvas').evaluate(canvas=>{const ctx=document.createElement('canvas');ctx.width=240;ctx.height=140;const image=ctx.getContext('2d',{willReadFrequently:true});image.drawImage(canvas,0,0,240,140);const data=image.getImageData(0,0,240,140).data;const colors=new Set();for(let i=0;i<data.length;i+=144){colors.add(Math.floor(data[i]/12)+':'+Math.floor(data[i+1]/12)+':'+Math.floor(data[i+2]/12))}return colors.size});
+ assert.ok(visiblePixels>8,'El editor Android debe renderizar geometría visible tras escoger una pieza; colores detectados: '+visiblePixels);
+ assert.deepEqual(androidErrors,[],'El cambio desde biblioteca no debe generar errores en Android');
+ await android.screenshot({path:'qa-screenshots/v13-android-catalog-to-cad.png'});
  assert.deepEqual(errors,[],'Sin errores de JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Sin errores JavaScript en tableta');
  console.log('V13: inicio, catálogo independiente, edición, herramientas avanzadas y tableta OK');
 }finally{await browser?.close();server.kill('SIGTERM')}
