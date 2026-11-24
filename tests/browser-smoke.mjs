@@ -33,9 +33,9 @@ try{
  await page.locator('#librarySearch').fill('tubería recta');
  await page.locator('#partCatalog .part-card').first().click();
  assert.equal(await page.locator('#elementCount').innerText(),'3');
- await page.locator('#joinBtn').click();
- await page.locator('#objectList button').first().click();
- await page.getByRole('button',{name:/Guardar/}).last().click();
+ await page.locator('.v12-quick-btn').filter({hasText:'Unir'}).click();
+ assert.ok(await page.locator('.v12-quick').isVisible(),'La barra principal debe permanecer operativa');
+ await page.locator('.v12-quick-btn').filter({hasText:'Guardar'}).click();
  await page.locator('.v12-more').click();
  assert.ok(await page.locator('.studio-rail').isVisible(),'El modo avanzado debe mostrar las herramientas CAD');
  await page.getByRole('button',{name:'Planos',exact:true}).click();
