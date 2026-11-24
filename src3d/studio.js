@@ -4,7 +4,10 @@ import {storeProject,listProjects,loadProject,deleteProject} from './project-sto
 import {TRAIN_PRESETS,buildTrainPreset} from './train-presets.js';
 import {importMeshFile,booleanPieces,canBoolean} from './mesh-tools.js';
 import {createDrawingSVG,createReportHTML} from './drawings.js';
+import {CAD_SOLIDS,validateCadSpec} from './cad-schema.js';
+import {cadCreate,cadImport,cadBoolean,cadExport,cadStop} from './cad-runtime.js';
 import './studio.css';
+import './cad-ui.css';
 const by=id=>document.getElementById(id);
 const elm=(tag,attrs={},text='')=>{const e=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>{if(k==='class')e.className=v;else if(k==='type')e.type=v;else e.setAttribute(k,v)});if(text)e.textContent=text;return e};
 const safe=(v)=>String(v??'').slice(0,100);
@@ -23,6 +26,7 @@ export function createStudio(api){
  by('exportToggle')?.parentElement?.prepend(top);
  const selectBox=elm('div',{class:'studio-selection-hint hidden',id:'studioSelectionHint'});root.append(selectBox);
  const fileInput=elm('input',{type:'file',accept:'.stl,.glb,.gltf',style:'display:none'});document.body.append(fileInput);
+ const stepInput=elm('input',{type:'file',accept:'.step,.stp',style:'display:none'});document.body.append(stepInput);
  const showToast=s=>api.notify(s);
  const persist=async()=>{try{const proj=api.getProject();proj.meta={...current};await storeProject(proj);activeProjectId=current.id;storeAvailable=true;}catch(e){storeAvailable=false;api.status('Guardar proyecto JSON: el almacenamiento local no está disponible');}};
  function schedulePersist(){clearTimeout(timer);timer=setTimeout(()=>{persist()},1150)}
@@ -73,7 +77,7 @@ export function createStudio(api){
  function restoreExploded(){if(previewExplosion){for(const [id,pos] of previewExplosion){const obj=api.models.get(id);if(obj)obj.position.copy(pos)}previewExplosion=null;api.render()}showToast('Conjunto rearmado visualmente')}
  function openTools(tab='tree'){
   const panel=newPanel('Herramientas de ingeniería','Selecciona, inspecciona y documenta conjuntos mecánicos.',true);panel.dataset.panel='tree';const nav=elm('div',{class:'studio-tool-tabs'});const body=elm('div',{class:'studio-panel-body'});panel.append(nav,body);
-  const tabs=[['tree','Conjuntos'],['inspect','Inspección'],['cad','CAD experimental'],['measure','Medición']];
+  const tabs=[['tree','Conjuntos'],['inspect','Inspección'],['brep','CAD exacto'],['cad','CAD malla'],['measure','Medición']];
   function switchTab(key){nav.replaceChildren();for(const [id,label] of tabs){const b=action(nav,label,()=>switchTab(id),'studio-tab'+(id===key?' active':''));}body.replaceChildren();panel.dataset.panel=key;
    if(key==='tree'){renderTree(body);return}
    if(key==='inspect'){const c=section(body,'Inspección y desarme','Oculta carcasas, muestra piezas internas y separa módulos para revisión visual.');
@@ -84,6 +88,38 @@ export function createStudio(api){
     action(c,'Rearmar conjunto',restoreExploded);
     const note=input(c,'Hallazgo / observación','text',current.notes);note.addEventListener('change',()=>{current.notes=note.value;changed()});
     return;}
+   if(key==='brep'){
+    const intro=section(body,'Motor B-Rep · OpenCascade','Construye sólidos matemáticos y archivos STEP sin convertir previamente una malla triangular. Ejecuta el cálculo en un Web Worker independiente.');
+    const state=elm('p',{class:'studio-cad-status','role':'status'},'Motor bajo demanda · al crear una pieza se cargará OpenCascade WebAssembly por primera vez.');intro.append(state);
+    const forms=section(body,'Croquis paramétricos y extrusión','Elige una geometría y modifica las medidas en milímetros.');
+    const kind=select(forms,'Tipo de sólido',Object.entries(CAD_SOLIDS).map(([id,d])=>[id,d.label]));
+    const fields=elm('div',{class:'studio-cad-fields'});forms.append(fields);
+    const cadFieldNames={length:'Longitud (mm)',width:'Anchura (mm)',height:'Altura / espesor (mm)',diameter:'Diámetro exterior (mm)',holeDiameter:'Diámetro del taladro (mm)',wall:'Espesor de pared (mm)'};
+    const inputRefs={};
+    function updateFields(){fields.replaceChildren();for(const k of Object.keys(inputRefs))delete inputRefs[k];const spec=CAD_SOLIDS[kind.value];for(const key of spec.fields){const e=input(fields,cadFieldNames[key]||key,'number',spec.defaults[key]);e.min='.01';e.max='50000';e.step='.01';inputRefs[key]=e}}
+    kind.onchange=updateFields;updateFields();
+    function getSpec(){const spec={kind:kind.value};for(const [name,control] of Object.entries(inputRefs))spec[name]=Number(control.value);return validateCadSpec(spec)}
+    const run=async(cb)=>{state.textContent='Calculando sólido B-Rep; el visor permanece disponible…';try{await cb();state.textContent='Operación completada. La pieza conserva su definición STEP exacta.';}catch(error){state.textContent='Error: '+error.message;showToast('CAD exacto: '+error.message)} };
+    function insertBrep(model,label,source){const piece=api.standardPart('custom_mesh',api.items().length);piece.name=label.slice(0,80);piece.asset=model.asset;piece.pos=model.center;piece.dims=model.dims;piece.cad={kind:'brep',stepSource:model.stepSource,origin:model.center,spec:source};piece.metadata={source:'OpenCascade B-Rep',validation:'CONCEPTUAL SIN CERTIFICACIÓN',format:'STEP',unit:'mm'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Sólido B-Rep exacto creado · puedes exportarlo en STEP')}
+    action(forms,'Crear sólido B-Rep',()=>run(async()=>{const spec=getSpec();const result=await cadCreate(spec);insertBrep(result,CAD_SOLIDS[spec.kind].label,spec)}),'studio-action primary');
+    const current=api.current();
+    if(current?.cad?.spec&&Object.hasOwn(CAD_SOLIDS,current.cad.spec.kind)){
+     action(forms,'Cargar parámetros de pieza seleccionada',()=>{kind.value=current.cad.spec.kind;updateFields();for(const [key,e] of Object.entries(inputRefs))e.value=String(current.cad.spec[key]??CAD_SOLIDS[kind.value].defaults[key]);showToast('Parámetros de la pieza cargados')});
+     action(forms,'Regenerar pieza seleccionada',()=>run(async()=>{const result=await cadCreate(getSpec());api.checkpoint();current.asset=result.asset;current.dims=result.dims;current.cad={kind:'brep',stepSource:result.stepSource,origin:result.center,spec:getSpec()};current.pos=result.center;delete current.joint;api.refreshScene();api.selectPart(current.id);api.focusSelected()}));
+    }
+    const formats=section(body,'Intercambio CAD STEP','STEP conserva la geometría B-Rep. Las mallas STL/GLB antiguas no pueden convertirse automáticamente en sólidos STEP exactos.');
+    action(formats,'Importar modelo STEP / STP',()=>stepInput.click(),'studio-action primary');
+    action(formats,'Exportar pieza B-Rep seleccionada (.step)',()=>run(async()=>{const p=api.current(),data=await cadExport(p);await api.sendFile(data.blob,data.name);showToast('Archivo STEP exportado correctamente')}));
+    const exact=api.items().filter(x=>x.cad?.stepSource);
+    const bools=section(body,'Booleanas B-Rep exactas','Unir, restar e intersectar. Sólo piezas con definición STEP; deben tener rotación 0° para esta versión.');
+    if(exact.length<2)bools.append(elm('p',{class:'studio-warning'},'Necesitas dos sólidos CAD exactos. Crea bloques, cilindros o importa archivos STEP.'));
+    const opts=exact.map(p=>[p.id,p.name]);const first=select(bools,'Sólido A',opts),second=select(bools,'Sólido B',opts);if(opts.length>1)second.selectedIndex=1;
+    const operation=select(bools,'Operación',[['fuse','Unión B-Rep'],['cut','Restar B de A'],['intersect','Intersección B-Rep']]);
+    action(bools,'Ejecutar booleana exacta',()=>run(async()=>{const a=api.items().find(p=>p.id===first.value),b=api.items().find(p=>p.id===second.value);if(!a||!b||a.id===b.id)throw Error('Elige dos sólidos distintos');const result=await cadBoolean(a,b,operation.value);insertBrep(result,'B-Rep '+operation.value+' · '+a.name,{kind:'boolean',operation:operation.value,sourceIds:[a.id,b.id]})}),'studio-action primary');
+    const limitations=section(body,'Alcance de V7','El sólido STEP se genera con OpenCascade. La visualización sigue siendo una malla tessellada; los objetos industriales anteriores no se convierten automáticamente a B-Rep. El archivo STEP exporta una pieza, no el ensamblaje entero.');
+    limitations.append(elm('p',{class:'studio-muted'},'Registra las tolerancias, materiales y verificaciones de fabricante antes de utilizar las piezas en documentación de fabricación.'));
+    return;
+   }
    if(key==='cad'){const c=section(body,'Operaciones de sólidos de malla','Unión, corte e intersección sobre primitivas herméticas. Experimental; NO es un motor B-Rep ni exporta STEP.');
     const primitives=api.items().filter(canBoolean);if(primitives.length<2){c.append(elm('p',{class:'studio-warning'},'Añade al menos dos sólidos: bloque, cilindro o esfera, desde Biblioteca → Sólidos CAD.'));}
     const opts=primitives.map(p=>[p.id,p.name]);const a=select(c,'Sólido A',opts),b=select(c,'Sólido B',opts);if(opts.length>1)b.selectedIndex=1;
@@ -112,6 +148,7 @@ export function createStudio(api){
   action(body,'Guardar proyecto editable JSON',()=>api.exportFile('json'));
   body.append(elm('p',{class:'studio-warning'},'Las vistas son proyecciones visuales, no planos de fabricación con cotas y tolerancias homologadas.'));
  }
+ stepInput.addEventListener('change',async()=>{const file=stepInput.files?.[0];if(!file)return;try{showToast('Importando B-Rep STEP…');const result=await cadImport(file);const part=api.standardPart('custom_mesh',api.items().length);part.name=file.name.replace(/\.(step|stp)$/i,'').slice(0,80);part.asset=result.asset;part.pos=result.center;part.dims=result.dims;part.cad={kind:'brep',stepSource:result.stepSource,origin:result.center,spec:{kind:'importSTEP',fileName:file.name}};part.metadata={sourceFile:file.name,sourceFormat:'STEP B-Rep',validation:'SIN VERIFICAR',unit:'mm'};api.checkpoint();api.appendPart(part);api.selectPart(part.id);api.focusSelected();showToast('STEP cargado en formato B-Rep · exportación disponible');close();}catch(e){console.error(e);showToast('Error STEP: '+e.message)}finally{stepInput.value=''}});
  fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;try{showToast('Procesando modelo 3D…');const imported=await importMeshFile(file,fileInput.dataset.units||'mm');const piece=api.standardPart('custom_mesh',api.items().length);piece.name=file.name.slice(0,75);piece.asset=imported.asset;piece.pos=imported.center;piece.dims=imported.dims;piece.metadata={sourceFile:file.name,sourceFormat:imported.sourceFormat,validation:'NO VERIFICADO'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Modelo STL/GLB importado. Revisa sus unidades y geometría.')}catch(e){console.error(e);showToast('Error de importación: '+e.message)}finally{fileInput.value=''}});
  railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
  window.addEventListener('keydown',e=>{if(e.key==='Escape')close();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();persist().then(()=>showToast('Proyecto guardado localmente'))}});

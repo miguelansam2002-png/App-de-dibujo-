@@ -1,0 +1,7 @@
+/* V7 · Panel de CAD B-Rep dentro de Studio */
+.studio-cad-status{font-weight:750;color:#177282;background:#e8f6f7;border:1px solid #b5dce0;border-left:4px solid #2396a7;border-radius:9px;padding:11px 13px;font-size:12px;margin:4px 0 0;line-height:1.5}
+.studio-cad-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.studio-cad-fields .studio-field{min-width:0}
+.studio-tool-tabs .studio-tab:nth-child(3){border-color:#2d9e9c;background:#e5f4f3;color:#176b77}
+.studio-tool-tabs .studio-tab.active:nth-child(3){background:#176a83;color:#fff}
+@media(max-width:530px){.studio-cad-fields{grid-template-columns:1fr}.studio-tool-tabs .studio-tab{padding:11px 9px}}
