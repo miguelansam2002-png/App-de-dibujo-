@@ -21,7 +21,7 @@ try{
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
   assert.equal(await page.locator('.part-card').count(),138,'El catálogo debe mostrar 138 componentes disponibles');
-  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V9 listo'),true);
+  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V10 listo'),true);
   await page.waitForTimeout(600);
   assert.ok(await page.locator('.part-card[data-part-type]').count()===138,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
@@ -115,7 +115,27 @@ try{
   await page.screenshot({path:'qa-screenshots/ficha-v9.png'});
   await page.getByRole('button',{name:'Guardar ficha técnica'}).click();
   await page.locator('.studio-close').click();
+  // V10: planos ortogonales, cortes, metadatos, inspecciones e informes.
+  await page.getByRole('button',{name:'Planos',exact:true}).click();
+  assert.ok(await page.getByText('Planos, cortes e informes de ingeniería').isVisible());
+  assert.ok(await page.getByRole('button',{name:'Exportar PDF vectorial'}).isVisible());
+  await page.getByLabel('Código del plano').fill('TEST-V10-A3');
+  await page.getByRole('button',{name:'Guardar datos de plano'}).click();
+  await page.getByRole('button',{name:'Actualizar vista previa'}).click();
+  await page.locator('.v10-preview svg').waitFor({timeout:60000});
+  await page.screenshot({path:'qa-screenshots/plano-v10.png'});
+  await page.getByRole('button',{name:'Inspección',exact:true}).click();
+  assert.ok(await page.getByText('Registro de inspección por componente').isVisible());
+  await page.getByLabel('Inspector / responsable').fill('Inspección de prueba');
+  await page.getByRole('button',{name:'Guardar observación'}).click();
+  const inspected=await page.evaluate(()=>JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3')));
+  assert.ok(inspected.items.some(p=>p.metadata?.inspections?.length),'V10 debe conservar las observaciones por componente');
+  await page.screenshot({path:'qa-screenshots/inspeccion-v10.png'});
+  await page.getByRole('button',{name:'Informes',exact:true}).click();
+  assert.ok(await page.getByRole('button',{name:'Exportar informe PDF'}).isVisible());
+  await page.screenshot({path:'qa-screenshots/informe-v10.png'});
+  await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
-  console.log('Pruebas UI V9: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
+  console.log('Pruebas UI V10: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
