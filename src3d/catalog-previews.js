@@ -4,14 +4,14 @@ import * as THREE from 'three';
 // No external thumbnails, requests or unlicensed CAD files are required.
 let renderer=null,scene=null,camera=null,observer=null,run=false;
 const cache=new Map(),queue=[];
-const MAX_PREVIEW_CACHE=100;
+const MAX_PREVIEW_CACHE=160;
 function setup(){
  if(renderer)return true;
  try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'});
-  renderer.setPixelRatio(1);renderer.setSize(192,125,false);renderer.outputColorSpace=THREE.SRGBColorSpace;
-  scene=new THREE.Scene();scene.background=new THREE.Color('#f1f6f9');
-  camera=new THREE.PerspectiveCamera(35,192/125,.1,500000);
+  renderer.setPixelRatio(1);renderer.setSize(256,168,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
+  scene=new THREE.Scene();scene.background=new THREE.Color('#e4eaec');
+  camera=new THREE.PerspectiveCamera(35,256/168,.1,500000);
   scene.add(new THREE.HemisphereLight(0xf6fdff,0x8092a2,3));
   const l=new THREE.DirectionalLight(0xffffff,3.2);l.position.set(300,600,450);scene.add(l);
   const l2=new THREE.DirectionalLight(0xdceeff,1.1);l2.position.set(-300,-100,-400);scene.add(l2);
