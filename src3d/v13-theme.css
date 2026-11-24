@@ -46,3 +46,11 @@ body{background:#131b25;color:#edf1f4}
 .v13-project-card small{color:#91a6b5}
 .v13-project-card button{margin-top:auto}
 @media(max-width:650px){.v13-project-grid{grid-template-columns:1fr}.v12-shell{padding-top:34px}}
+
+.v13-tool-palette[hidden]{display:none!important}
+.v13-tool-palette{position:fixed;bottom:156px;left:50%;transform:translateX(-50%);z-index:250;width:min(680px,calc(100vw - 22px));max-height:min(68vh,550px);overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:17px;border:1px solid #91775f;border-radius:18px;background:#22313deb;box-shadow:0 22px 70px #02060bc9;backdrop-filter:blur(19px)}
+.v13-tool-group{display:flex;flex-direction:column;gap:7px;min-width:0}
+.v13-tool-group h3{margin:2px 0 7px;color:#efb777;font-size:12px;font-weight:800}
+.v13-tool{min-height:42px;background:#334552;border:1px solid #536776;color:#eaf1f5;border-radius:10px;text-align:left;font-size:12px;padding:10px 12px}
+.v13-tool:hover,.v13-tool:focus-visible{background:#66503e;border-color:#e8a968}
+@media(max-width:650px){.v13-tool-palette{grid-template-columns:1fr;bottom:88px;max-height:65vh;left:11px;right:11px;transform:none;width:auto}}
