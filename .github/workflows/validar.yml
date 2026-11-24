@@ -1,0 +1,17 @@
+name: Validar Trazo Técnico 2D
+on:
+  push:
+  pull_request:
+
+jobs:
+  sintaxis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Revisar JavaScript
+        run: npm run check
