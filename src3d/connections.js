@@ -10,27 +10,27 @@ const mk=(id,label,x,dir,diameter)=>P(id,label,'end',[x,0,0],[dir,0,0],diameter)
 export function portsFor(part){
  const d=part?.dims||{},t=part?.type||'', L=Number(d.length||300),D=Number(d.diameter||114.3);
  const ends=(a=D,b=D)=>[mk('A','Boca A',-L/2,-1,a),mk('B','Boca B',L/2,1,b)];
- if(['pipe','pipe_nipple','pipe_insulated','pipe_spool','union','coupling','valve','valve_ball','valve_butterfly','valve_check','strainer'].includes(t)){
+ if(['pipe','pipe_nipple','pipe_insulated','pipe_spool','pipe_lined','pipe_doublewall','pipe_spool_bolted','pipe_repair_sleeve','pipe_miter','union','coupling','grooved_coupling','expansion_bellows','stub_end','valve','valve_ball','valve_butterfly','valve_check','strainer','valve_globe','valve_needle','valve_plug','valve_diaphragm','valve_actuated','valve_3way'].includes(t)){
   const out=ends(t==='coupling'?Number(d.bore||D):D);
-  if(['pipe','pipe_spool','pipe_nipple','pipe_insulated'].includes(t))out.push(P('axis','Eje para grapa','axis',[0,0,0],[1,0,0],D));
+  if(['pipe','pipe_spool','pipe_nipple','pipe_insulated','pipe_lined','pipe_doublewall','pipe_spool_bolted','pipe_repair_sleeve'].includes(t))out.push(P('axis','Eje para grapa','axis',[0,0,0],[1,0,0],D));
   return out;
  }
- if(['tee','tee_reducing'].includes(t))return [...ends(),P('branch','Ramal superior','end',[0,Number(d.branch||0),0],[0,1,0],t==='tee'?D:Number(d.branchDiameter||D))];
+ if(['tee','tee_reducing','wye45','lateral45','weldolet'].includes(t))return [...ends(),P('branch','Ramal superior','end',[0,Number(d.branch||0),0],[0,1,0],t==='tee'?D:Number(d.branchDiameter||D))];
  if(t==='cross')return [...ends(),P('up','Ramal superior','end',[0,Number(d.branch||0)/2,0],[0,1,0],D),P('down','Ramal inferior','end',[0,-Number(d.branch||0)/2,0],[0,-1,0],D)];
  if(t==='reducer'||t==='reducer_ecc')return ends(Number(d.smallDiameter||D),D);
- if(['elbow','elbow45','elbow180'].includes(t)){
+ if(['elbow','elbow45','elbow180','elbow_short','elbow_socket','elbow_thread'].includes(t)){
   const deg=t==='elbow45'?45:t==='elbow180'?180:90, a=deg*Math.PI/180, R=Number(d.radius||150);
   return [P('A','Entrada del codo','end',[0,0,0],[-1,0,0],D),P('B','Salida del codo','end',[R*Math.sin(a),0,R*(1-Math.cos(a))],[Math.cos(a),0,Math.sin(a)],D)];
  }
- if(['flange','flange_wn','flange_blind','gasket'].includes(t)){
+ if(['flange','flange_wn','flange_blind','gasket','flange_socket','flange_threaded','flange_lap','flange_orifice'].includes(t)){
   const diameter=Number(d.bore||114.3);
   const thick=Number(d.thickness||12),x=thick/2;
   return [mk('A','Cara A',-x,-1,diameter),mk('B','Cara B',x,1,diameter)];
  }
  if(t==='cap')return [P('A','Boca abierta','end',[-L*.515,0,0],[-1,0,0],D)];
- if(t==='clamp_u')return [P('mount','Centro de grapa','mount',[0,Number(d.height||205)/2-Number(d.width||132)/2,0],[0,0,1],Number(d.width||132))];
- if(t==='clamp_omega')return [P('mount','Centro de arco','mount',[0,-Number(d.height||115)*.35,0],[0,0,1],Number(d.width||132))];
- if(['clamp_split','clamp_saddle','clevis','pipe_shoe'].includes(t))return [P('mount','Eje de soporte','mount',[0,0,0],[0,0,1],Number(d.diameter||150))];
+ if(['clamp_u','clamp_u_saddle'].includes(t))return [P('mount','Centro de grapa','mount',[0,Number(d.height||205)/2-Number(d.width||132)/2,0],[0,0,1],Number(d.width||132))];
+ if(['clamp_omega','clamp_band'].includes(t))return [P('mount','Centro de arco','mount',[0,-Number(d.height||115)*.35,0],[0,0,1],Number(d.width||132))];
+ if(['clamp_split','clamp_saddle','clevis','pipe_shoe','clamp_rubber','clamp_hinged','clamp_riser','clamp_strut','support_guide','support_anchor'].includes(t))return [P('mount','Eje de soporte','mount',[0,0,0],[0,0,1],Number(d.diameter||150))];
  return [];
 }
 
