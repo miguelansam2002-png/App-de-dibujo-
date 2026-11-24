@@ -7,7 +7,7 @@ export function cleanProject(project){
  const items=project.items.map(x=>({...x}));
  if(items.length>500)throw Error('El proyecto tiene demasiados componentes');
  return {format:'trazo-tecnico-3d',version:STUDIO_VERSION,name:String(project.name||'Diseño sin nombre').slice(0,100),units:'mm',items,
- meta:{id:String(project.meta?.id||uid()),category:String(project.meta?.category||'General'),notes:String(project.meta?.notes||''),createdAt:String(project.meta?.createdAt||new Date().toISOString()),updatedAt:new Date().toISOString()}};
+ meta:{id:String(project.meta?.id||uid()),category:String(project.meta?.category||'General'),notes:String(project.meta?.notes||''),createdAt:String(project.meta?.createdAt||new Date().toISOString()),updatedAt:new Date().toISOString(),revision:String(project.meta?.revision||'0'),doc:project.meta?.doc&&typeof project.meta.doc==='object'?structuredClone(project.meta.doc):null}};
 }
 export function billOfMaterials(items,parts){
  const rows=new Map();for(const p of items){const type=p.type||'Desconocido',key=type+'|'+Object.entries(p.dims||{}).sort().map(([k,v])=>k+':'+v).join(',');
