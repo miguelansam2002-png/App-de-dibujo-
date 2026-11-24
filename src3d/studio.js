@@ -73,7 +73,7 @@ export function createStudio(api){
   const sub=section(body,'Explorar piezas individuales','Las familias nuevas están integradas en la biblioteca junto con los 99 componentes anteriores.');action(sub,'Abrir biblioteca 3D',()=>{close();by('libraryPanel').classList.add('open')});
  }
  function renderTree(body){if(!body)return;body.replaceChildren();const groups=groupByAssembly(api.items());for(const g of groups){const sec=section(body,`${g.name} · ${g.items.length}`,g.id==='_libres'?'Piezas independientes':'Conjunto manipulable de piezas');
-  const list=elm('div',{class:'studio-tree-list'});for(const p of g.items){const row=elm('div',{class:'studio-tree-row'});const name=action(row,`${p.hidden?'◌':'◉'} ${p.joint?'🔗 ':''}${p.name}`,()=>{api.selectPart(p.id);api.focusSelected();renderSummary()},'studio-tree-select');row.append(elm('small',{},p.metadata?.equipmentTag||p.type));action(row,p.hidden?'Ver':'Ocultar',()=>toggleHidden(p.id),'studio-small');list.append(row)}sec.append(list);
+  const list=elm('div',{class:'studio-tree-list'});for(const p of g.items){const row=elm('div',{class:'studio-tree-row'});const name=action(row,`${p.hidden?'◌':'◉'} ${(p.joint||p.constraint)?'🔗 ':''}${p.name}`,()=>{api.selectPart(p.id);api.focusSelected();renderSummary()},'studio-tree-select');row.append(elm('small',{},p.metadata?.equipmentTag||p.type));action(row,p.hidden?'Ver':'Ocultar',()=>toggleHidden(p.id),'studio-small');list.append(row)}sec.append(list);
   if(g.id!=='_libres'){const dx=elm('div',{class:'studio-inline'});const shift=input(dx,'Mover X (mm)','number','200');action(dx,'Desplazar conjunto',()=>{const value=Number(shift.value)||0;api.checkpoint();for(const p of g.items)p.pos[0]+=value;api.refreshScene();api.fitScene();showToast('Conjunto desplazado '+format(value)+' mm');},'studio-action');sec.append(dx);action(sec,'Vista explosionada',()=>explode(g.items),'studio-action');action(sec,'Volver a montar',restoreExploded,'studio-action');}}
  }
  function explode(pieces){if(previewExplosion)restoreExploded();previewExplosion=new Map();const ids=new Set(pieces.map(p=>p.id));let i=0;for(const p of pieces){const obj=api.models.get(p.id);if(!obj||!obj.visible)continue;previewExplosion.set(p.id,obj.position.clone());const offset=(i-Math.ceil(pieces.length/2))*Math.max(170,370);obj.position.x+=offset;obj.updateMatrixWorld();i++}api.render();showToast('Vista explosionada visual · no modifica las dimensiones del proyecto')}
@@ -105,18 +105,18 @@ export function createStudio(api){
   const pieces=api.items(),card=section(body,'Restricciones mecánicas','Selecciona dos piezas. Montaje calcula la alineación y la mantiene cuando cambia el equipo principal. Unidades: mm y grados.');
   if(pieces.length<2){card.append(elm('p',{class:'studio-warning'},'Inserta dos piezas o abre una plantilla de tren de compresión antes de crear una unión.'));return;}
   const opts=pieces.map(p=>[p.id,p.name]);
-  const child=select(card,'Pieza que se desplazará',opts),parent=select(card,'Pieza principal / referencia',opts);
+  const child=select(card,'Pieza que se desplazará',opts),parent=select(card,'Pieza principal / referencia',opts);child.id='assemblyChild';parent.id='assemblyParent';
   const current=api.current();if(current)child.value=current.id;
   if(parent.value===child.value){const next=pieces.find(p=>p.id!==child.value);if(next)parent.value=next.id}
-  const rule=select(card,'Tipo de relación',CONSTRAINT_KINDS.map(x=>[x.id,x.label]));
+  const rule=select(card,'Tipo de relación',CONSTRAINT_KINDS.map(x=>[x.id,x.label]));rule.id='assemblyType';
   const desc=elm('p',{class:'studio-muted'});card.append(desc);
   const anchors=elm('div',{class:'studio-constraint-anchors'});card.append(anchors);
   let ownControl=null,targetControl=null;
   function updateAnchors(){anchors.replaceChildren();
    const c=pieces.find(x=>x.id===child.value),p=pieces.find(x=>x.id===parent.value);
    if(!c||!p)return;
-   ownControl=select(anchors,'Referencia de la pieza',referenceAnchors(c).map(a=>[a.id,a.label]));
-   targetControl=select(anchors,'Referencia del objetivo',referenceAnchors(p).map(a=>[a.id,a.label]));
+   ownControl=select(anchors,'Referencia de la pieza',referenceAnchors(c).map(a=>[a.id,a.label]));ownControl.id='assemblyOwnAnchor';
+   targetControl=select(anchors,'Referencia del objetivo',referenceAnchors(p).map(a=>[a.id,a.label]));targetControl.id='assemblyTargetAnchor';
    const candidates=referenceAnchors(c).filter(a=>a.id.startsWith('port:')&&(['shaft','end','axis'].includes(a.kind)));
    const targets=referenceAnchors(p).filter(a=>a.id.startsWith('port:')&&(['shaft','end','axis'].includes(a.kind)));
    if(candidates.length&&targets.length&&rule.value==='coaxial'){ownControl.value=candidates[0].id;targetControl.value=targets[targets.length-1].id}
@@ -126,7 +126,7 @@ export function createStudio(api){
   }
   child.onchange=updateAnchors;parent.onchange=updateAnchors;rule.onchange=updateAnchors;updateAnchors();
   const controls=elm('div',{class:'studio-constraint-values'});card.append(controls);
-  const offset=input(controls,'Separación (mm)','number',0),twist=input(controls,'Giro sobre eje (°)','number',0),angle=input(controls,'Inclinación (°)','number',0);
+  const offset=input(controls,'Separación (mm)','number',0),twist=input(controls,'Giro sobre eje (°)','number',0),angle=input(controls,'Inclinación (°)','number',0);offset.id='assemblyOffset';twist.id='assemblyTwist';angle.id='assemblyAngle';
   [offset,twist,angle].forEach(x=>{x.step='0.5';x.min='-50000';x.max='50000'});angle.max='180';
   const actions=elm('div',{class:'studio-inline studio-v8-actions'});card.append(actions);
   action(actions,'Crear restricción',()=>{try{
@@ -158,10 +158,10 @@ export function createStudio(api){
  }
  async function renderCollisionPanel(body){
   const opts=section(body,'Interferencias entre superficies','Busca cruces geométricos triangulares con aceleración BVH. Usa una comprobación de cajas solo para descartar pares lejanos.');
-  const tolerance=input(opts,'Tolerancia mínima para ignorar contacto superficial (mm)','number',1);tolerance.min='0';tolerance.max='100';tolerance.step='.25';
+  const tolerance=input(opts,'Tolerancia mínima para ignorar contacto superficial (mm)','number',1);tolerance.id='interferenceTolerance';tolerance.min='0';tolerance.max='100';tolerance.step='.25';
   const chk=elm('label',{class:'studio-v8-checkbox'});const skip=elm('input',{type:'checkbox'});skip.checked=true;chk.append(skip,elm('span',{},'No evaluar piezas ya conectadas por una unión o restricción'));opts.append(chk);
   const chk2=elm('label',{class:'studio-v8-checkbox'});const same=elm('input',{type:'checkbox'});same.checked=false;chk2.append(same,elm('span',{},'Ignorar pares del mismo tren de compresión'));opts.append(chk2);
-  const status=elm('p',{class:'studio-v8-progress',role:'status'},'Listo para analizar las piezas visibles.');opts.append(status);
+  const status=elm('p',{class:'studio-v8-progress',role:'status',id:'interferenceStatus'},'Listo para analizar las piezas visibles.');opts.append(status);
   const result=section(body,'Resultados','Cruces de superficies confirmados y casos que requieren revisión por contención o por límites de cálculo.');
   action(opts,'Analizar interferencias 3D',async()=>{
    status.textContent='Explorando geometría del ensamblaje…';result.replaceChildren(elm('h3',{},'Resultados'));
