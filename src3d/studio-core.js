@@ -1,5 +1,5 @@
 // Helpers puros: gestión de proyectos y ensamblajes. Sin dependencias del navegador.
-export const STUDIO_VERSION=7;
+export const STUDIO_VERSION=8;
 export const MAX_PROJECTS=80;
 export const uid=(prefix='proyecto')=>`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
 export function cleanProject(project){
@@ -21,4 +21,4 @@ export function bomToCsv(rows){return '\uFEFF'+[['N°','Componente','Descripció
 export function groupByAssembly(items){const map=new Map();for(const p of items){const key=p.assemblyId||'_libres';if(!map.has(key))map.set(key,{id:key,name:p.assemblyId?(p.assemblyName||'Ensamblaje'):'Piezas independientes',items:[]});map.get(key).items.push(p)}return [...map.values()]}
 export function aabbGap(a,b){const delta=['x','y','z'].map(k=>Math.max(0,b.min[k]-a.max[k],a.min[k]-b.max[k]));return Math.hypot(...delta)}
 export function uniqueItemIds(items){const seen=new Set();for(const item of items){if(!item.id||seen.has(item.id))return false;seen.add(item.id)}return true}
-export function assemblySummary(items){return {pieces:items.length,assemblies:new Set(items.map(p=>p.assemblyId).filter(Boolean)).size,types:new Set(items.map(p=>p.type)).size,linked:items.filter(p=>p.joint?.targetId).length}}
+export function assemblySummary(items){return {pieces:items.length,assemblies:new Set(items.map(p=>p.assemblyId).filter(Boolean)).size,types:new Set(items.map(p=>p.type)).size,linked:items.filter(p=>p.joint?.targetId||p.constraint?.targetId).length}}
