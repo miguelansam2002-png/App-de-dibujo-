@@ -16,7 +16,7 @@ try{
  await page.screenshot({path:'qa-screenshots/v13-inicio.png'});
  await page.locator('.v13-shell-link').filter({hasText:'Proyectos'}).click();
  await page.getByRole('heading',{name:'Tus proyectos y modelos preparados'}).waitFor();
- assert.equal(await page.locator('.v13-project-card').count(),3,'Tres modelos de tren de compresión prediseñados');
+ assert.equal(await page.locator('.v13-project-section').last().locator('.v13-project-card').count(),3,'Tres modelos de tren de compresión prediseñados');
  await page.screenshot({path:'qa-screenshots/v13-proyectos.png'});
  await page.locator('.v13-shell-link').filter({hasText:'Biblioteca 3D'}).click();
  
