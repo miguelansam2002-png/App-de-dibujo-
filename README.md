@@ -1,31 +1,28 @@
-# Trazo Técnico 3D — Versión 4
+# Trazo Tecnico 3D V5 - Biblioteca industrial
 
-Aplicación de diseño tridimensional para bocetos y ensamblajes conceptuales de ingeniería, especialmente tuberías, grapas, bridas, válvulas y soportes. Optimizada para pantallas táctiles Android y escritorio.
+Aplicacion 3D tactil para hacer bocetos, ensamblajes y predimensionamiento conceptual de tuberias, soportes, abrazaderas, elementos estructurales y equipos. El proyecto mantiene el funcionamiento de union automatica de V4 y agrega un catalogo 3D mucho mas amplio.
 
-## Novedades V4
+## Mejoras de V5
 
-- **Unir sin arrastrar a mano:** selecciona una pieza, pulsa **🔗 Unir**, toca la pieza destino y ambas se alinean por sus conexiones compatibles.
-- **Unión al insertar:** con la opción **Unir al insertar** activada, selecciona una tubería y toca un accesorio en la biblioteca. El nuevo componente se acopla automáticamente a una boca libre cuando existe un conector compatible.
-- **Ajuste magnético durante el movimiento:** al aproximar dos bocas compatibles se muestra una indicación turquesa. Suelta para vincularlas.
-- **Enlaces persistentes entre piezas:** la unión mantiene una relación geométrica de ensamblaje; si cambias dimensiones o posición de la pieza principal, sus piezas hijas se reajustan. También puedes **Separar** una pieza y conservar su posición.
-- **Selector avanzado de conexiones:** desde las propiedades puedes indicar pieza destino y elegir específicamente las bocas de conexión.
-- **Más detalle en varios componentes:** grapas U con placas perforadas, arandelas, tuercas y roscas; grapas omega con anclajes y pernos; bridas con caras realzadas; extremos de tuberías y accesorios reforzados visualmente.
-- Interfaz de unión destacada con acentos turquesa y botones táctiles mayores.
-- Conserva los **47 tipos de componentes** anteriores, medidas NPS/DN, unidades mm, guardar JSON, exportar PNG, STL y GLB.
+- **99 modelos parametricos**: los 47 componentes originales y 52 variantes nuevas.
+- **Miniaturas 3D del propio modelo** en el catalogo, generadas localmente; las miniaturas no se descargan de servicios externos.
+- Piezas con mayor detalle visual: bordes de tuberia, soldaduras representativas, tornilleria, empaque, ranuras, bandas, abrazaderas, bridas y soportes.
+- Versiones adicionales de tuberia doble pared y revestida, spool empernado, codos de radio corto, codos socket y roscados, reductores, conexiones Y, valvulas, juntas de expansion, colgadores, motor, manometro y otras piezas.
+- **22 medidas de tuberia NPS/DN**, desde 1/8 hasta 24 pulgadas, con valores de referencia para Schedule 40 y Schedule 80. La disponibilidad comercial y los espesor normativos para el material y el proyecto deben comprobarse.
+- Controles editables en milimetros con medidas, colores y acabados; mantiene unir, encajar, separar y guardar JSON.
+- Mantiene versiones para escritorio y Android, exportacion PNG / STL / GLB y respaldos JSON.
 
-## Uso rápido en tableta
+## Como usar la biblioteca
 
-1. Abre **Piezas**, selecciona una tubería o usa la predeterminada.
-2. Activa **Unir al insertar** y añade un codo, una brida u otra pieza con diámetro compatible. La aplicación acopla las bocas automáticamente.
-3. Para unir dos piezas que ya están en el dibujo: selecciona la **pieza que quieres mover**, pulsa **🔗 Unir**, después toca la **pieza destino** en el modelo.
-4. Para indicar extremos exactos, abre **Editar → Ensamble inteligente**, elige pieza destino, «Mi conexión» y «Conexión destino», y pulsa **Alinear y unir automáticamente**.
-5. También puedes aproximar una pieza con el dedo: cuando aparezca el indicador de encaje, suéltala.
-6. Para mover por separado una pieza vinculada, pulsa **Separar** o arrástrala (la aplicación desvincula esa pieza al iniciar un movimiento libre).
-7. Exporta **JSON** con frecuencia: guarda una copia fuera de la app antes de actualizar o desinstalar una APK de prueba.
+1. Abre **Piezas** desde el panel izquierdo o la barra de la tableta.
+2. Elige una categoria o busca por nombre de pieza. Las tarjetas mostraran una previsualizacion 3D si la tableta admite un segundo contexto WebGL; de lo contrario, se conserva el simbolo de cada pieza.
+3. Toca la pieza para colocarla. Si **Unir al insertar** esta activado, el editor intentara conectarla a la pieza seleccionada usando diametros y conectores compatibles.
+4. Selecciona la pieza para ajustar longitud, diametro, espesor, orientacion, posicion o acabado en **Editar**.
+5. Guarda una copia JSON del proyecto antes de actualizar la APK.
 
-Los enlaces de montaje son editables y **no son operaciones booleanas de fusión de sólidos**. Se conservan en los archivos JSON de la versión 4.
+## Ejecucion local
 
-## Desarrollo
+Requiere Node.js 22.12 o superior.
 
 ```bash
 npm install
@@ -34,7 +31,7 @@ npm test
 npm run dev
 ```
 
-La acción [APK de prueba](.github/workflows/android-apk.yml) compila la versión de Android con Capacitor (debug). La acción [Prueba visual](.github/workflows/ui-visual.yml) revisa la interfaz de escritorio/tableta en navegador.
+El sitio web offline se construye con `npm run build`. Para compilar APK desde una maquina con Java y Android SDK instalados:
 
 ```bash
 npm run build
@@ -44,12 +41,22 @@ cd android
 ./gradlew assembleDebug
 ```
 
-El ejecutable de depuración aparece en `android/app/build/outputs/apk/debug/app-debug.apk`.
+GitHub Actions ejecuta pruebas geometricas, prueba la interfaz en escritorio y tableta y genera un APK de desarrollo en **Actions**. El APK aun requiere pruebas en una tableta fisica y firma de produccion para distribucion estable.
 
-## Alcance técnico y próximos pasos
+## Criterios de rigor y procedencia
 
-Los modelos constituyen geometrías paramétricas conceptuales, **no modelos certificados de fabricante**. Aún no hay un núcleo B-Rep para booleanas exactas, detección real de colisiones ni un sistema de restricciones mecánicas completo. Las bridas, grapas y codos deben validarse contra documentación original del fabricante y las normas aplicables antes de fabricar. Los modelos comerciales de terceros no se redistribuyen sin licencia. STL y GLB representan mallas y no equivalen a STEP de fabricación.
+Todos los modelos incorporados se generan mediante geometria original de este repositorio. **No son replicas verificadas ni certificados de fabricantes**: sirven para estudios, croquis y visualizacion, no para fabricar o instalar sin revision tecnica.
 
-Próximos hitos: conexiones con más familias (instrumentación, bombas, soportes personalizados), croquis 2D vinculados a cuerpos 3D, fusión CAD B-Rep, biblioteca industrial verificada, lista de materiales, control de interferencias y actualización Android firmada para producción.
+Las medidas de tuberia se contrastaron a nivel de catalogo con el boletin PFI TB-10 y catalogos dimensionales de accesorios de acero. La geometria de abrazaderas toma como referencia funcional los catalogos de fabricantes para identificar varillas, placas, tuercas y bandas, sin reproducir modelos propietarios.
 
-La versión 2D original sigue en `standalone/TrazoTecnico_v1.html`. El editor 3D V4 importa archivos JSON de las versiones anteriores conservando las geometrías; realiza una copia de seguridad antes de modificar un proyecto.
+- PFI TB-10 / ASME B36.10 (referencia de NPS): https://www.pfi-institute.org/media/files/TB-10.pdf
+- Weldbend, catalogo de dimensiones SCH 40/80: https://weldbend.com/Catalog_63_English_Metric.pdf
+- NORMAFIX U-bolt clamp (referencia funcional): https://www.norma-connects.com/sites/dsemea/files/qbank/documents/NORMA-U-Bolt-Clamp-Datasheet.pdf
+- Fluid Controls, soportes U-bolt: https://fluidcontrols.com/products/clamps-and-flanges/pipe-clamps-2/u-bolt-clamps/
+- Referencias normativas a consultar en cada proyecto: ASME B16.5, ASME B16.9 y MSS SP-58.
+
+No se ha implementado un motor B-Rep de solidos exactos, analisis estructural, controles de interferencia certificados ni conversion automatica a STEP/DWG. STL y GLB exportan mallas de visualizacion, no planos listos para fabricacion.
+
+## Versiones conservadas
+
+La version 2D original sigue en `standalone/TrazoTecnico_v1.html`. Los archivos JSON V2-V4 se pueden importar y conservan su esquema base. Antes de desinstalar una APK beta exporta el proyecto JSON a almacenamiento externo.
