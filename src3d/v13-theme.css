@@ -54,3 +54,9 @@ body{background:#131b25;color:#edf1f4}
 .v13-tool{min-height:42px;background:#334552;border:1px solid #536776;color:#eaf1f5;border-radius:10px;text-align:left;font-size:12px;padding:10px 12px}
 .v13-tool:hover,.v13-tool:focus-visible{background:#66503e;border-color:#e8a968}
 @media(max-width:650px){.v13-tool-palette{grid-template-columns:1fr;bottom:88px;max-height:65vh;left:11px;right:11px;transform:none;width:auto}}
+
+.v13-shell-nav{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:0 auto 30px;padding:6px;width:fit-content;max-width:100%;border:1px solid #536574;border-radius:15px;background:#263440eb;position:relative;z-index:5}
+.v13-shell-link{background:transparent;border:1px solid transparent;border-radius:10px;color:#c4d2da;font-size:13px;font-weight:750;padding:11px 16px;min-height:43px}
+.v13-shell-link.active{background:#a66c39;border-color:#d3a371;color:#fff}
+.v13-shell-link:hover{border-color:#c69a66;background:#465464;color:#fff}
+@media(max-width:650px){.v13-shell-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin-bottom:23px;width:100%}.v13-shell-link{padding:10px 3px;font-size:10px}}
