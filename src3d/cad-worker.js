@@ -1,7 +1,7 @@
 // Motor B-Rep en Worker: no bloquea los gestos del visor.
 // Representación matemática de sólidos OCCT; la malla STL sólo sirve para previsualizar.
-import initOpenCascade from 'replicad-opencascadejs/src/replicad_single.js';
-import wasmURL from 'replicad-opencascadejs/src/replicad_single.wasm?url';
+import initOpenCascade from 'replicad-opencascadejs';
+import wasmURL from 'replicad-opencascadejs/wasm?url';
 import * as CAD from 'replicad';
 import {validateCadSpec,validateCadPayload} from './cad-schema.js';
 let bootPromise=null;
