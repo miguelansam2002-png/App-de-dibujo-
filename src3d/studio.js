@@ -71,8 +71,7 @@ export function createStudio(api){
   await renderRecoveryPanel(body,{projectId:current.id,getProject:api.getProject,checkpoint:api.checkpoint,replaceProject:api.replaceProject,restore,notify:showToast,refresh:openProjects});
  }
  async function openProjectFromHome(id){
-  const loaded=await loadProject(id);if(!loaded)throw Error('Proyecto no encontrado');
-  if(loaded.meta?.id!==current.id)await persist();
+  await persist();const loaded=await loadProject(id);if(!loaded)throw Error('Proyecto no encontrado');
   api.replaceProject(loaded);restore(loaded.meta);close();api.fitScene();showToast('Proyecto abierto: '+loaded.name);
  }
  function insertTrainPresetFromHome(id){
