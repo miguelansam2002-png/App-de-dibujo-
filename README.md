@@ -1,28 +1,54 @@
-# Trazo Técnico 3D Studio V7 · CAD B-Rep
+# Trazo Técnico 3D Studio V8 — Ensamblajes mecánicos
 
-Aplicación Android y escritorio para diseño conceptual de ingeniería. **V7 integra OpenCascade mediante RepliCAD en un Web Worker**, para realizar cálculos CAD sin bloquear los gestos del visor.
+Aplicación de modelado técnico 3D para escritorio y tabletas Android. La **V8** construye sobre el módulo CAD B-Rep/STEP de la V7 e incorpora restricciones mecánicas editables, movimiento de conjuntos y un detector de interferencias entre superficies.
 
-## Funciones nuevas
+## Nuevas herramientas V8
 
-- **Ingeniería → CAD exacto:** croquis paramétricos elementales: bloque rectangular, cilindro, placa con taladro y tubería hueca. La geometría se crea como sólido B-Rep real, no como una malla triangular.
-- **Importación STEP/STP:** los sólidos importados se conservan en el proyecto con su geometría B-Rep (fuente STEP). La previsualización utiliza una malla derivada.
-- **Exportación STEP:** una pieza B-Rep seleccionada. No intenta convertir mallas STL/GLB antiguas en STEP.
-- **Booleanas B-Rep:** unión, corte e intersección de dos sólidos STEP. En V7 exigen rotación 0° para mantener el flujo de transformaciones fiable.
-- **Regeneración paramétrica:** edición de dimensiones de piezas B-Rep creadas desde perfiles simples; actualiza la definición STEP.
-- Mantiene las herramientas V6: biblioteca de 120 componentes, proyectos IndexedDB offline, tres trenes de compresión conceptuales, planos visuales A3, BOM, inspección y controles de tableta.
+### 1. Montaje y restricciones
 
-## Uso rápido
+Pulsa **Montaje** (barra lateral) o **Ingeniería → Montaje**.
 
-1. Abre **Ingeniería → CAD exacto**.
-2. Elige bloque, cilindro, placa perforada o tubo. Introduce las medidas en milímetros y pulsa **Crear sólido B-Rep**.
-3. Selecciona el objeto y pulsa **Exportar pieza B-Rep seleccionada (.step)**.
-4. Usa **Importar modelo STEP / STP** para insertar un modelo CAD con licencia y documentación válidas.
-5. Para unión, resta o intersección, crea/importa dos sólidos B-Rep; selecciónalos en los campos A y B.
-6. Guarda tus trabajos en **Proyectos** y exporta una copia JSON antes de cambiar de APK.
+1. Selecciona la **pieza que se desplazará**.
+2. Selecciona la **pieza principal** (referencia).
+3. Elige el tipo de relación:
+   - **Fijación rígida:** guarda posición y orientación relativas, útil para bases y equipos auxiliares.
+   - **Ejes concéntricos:** enfrenta y alinea referencias de ejes; permite ajustar separación axial y giro.
+   - **Caras coincidentes:** alinea dos caras enfrentadas con separación configurable.
+   - **Ejes paralelos:** conserva referencias paralelas.
+   - **Separación fija:** mantiene desplazamiento definido respecto al objetivo.
+   - **Ángulo de montaje:** incluye inclinación respecto a un eje de referencia.
+4. Elige sus **referencias geométricas**: caras ±X/±Y/±Z, origen local, bocas de tubería, extremos o ejes de motor/compresor cuando existan.
+5. Pulsa **Crear restricción**. El conjunto se actualiza sin introducir coordenadas manuales.
+6. **Mostrar referencias 3D** visualiza las direcciones de montaje. **Separar** elimina una restricción sin borrar la pieza.
 
-La primera operación inicializa el motor WebAssembly y puede consumir tiempo y memoria. Se distribuye localmente dentro de la aplicación y no requiere servidor de geometría.
+Las restricciones se guardan en JSON y en el gestor offline de proyectos. Al mover o girar la pieza principal, sus componentes dependientes se recalculan. Una pieza que el usuario mueve manualmente por separado se desvincula para evitar comportamientos inesperados. Se rechazan relaciones circulares.
 
-## Compilación
+### 2. Desplazar conjuntos
+
+En **Montaje → Desplazar conjunto rígido**, introduce X/Y/Z en mm. Puedes desplazar el tren entero o únicamente la pieza raíz y sus dependientes, manteniendo las relaciones.
+
+### 3. Interferencias 3D
+
+Abre **Ingeniería → Interferencias**. Define la tolerancia en mm y si deseas excluir piezas ya conectadas o pertenecientes al mismo tren.
+
+El analizador aplica:
+- **Fase 1:** descarte de pares separados mediante cajas envolventes AABB.
+- **Fase 2:** comprobación de intersección de superficies trianguladas con **three-mesh-bvh**, sobre las mallas reales y sus transformaciones 3D.
+- **Resultados:** cruces de superficies confirmados y casos de contención/lectura incompleta que necesitan validación.
+
+Puedes tocar **Ver A** o **Ver B** para ubicar las piezas sospechosas en el diseño.
+
+**Limitación importante:** el detector comprueba intersecciones de superficies de malla, **no** intersección volumétrica exacta con OpenCascade. Un sólido totalmente contenido en otro, geometrías abiertas o contactos menores que la tolerancia requieren inspección adicional. La profundidad indicada se estima por las cajas envolventes, no representa la penetración exacta entre superficies.
+
+## Funciones que se mantienen
+
+- 120 componentes paramétricos de biblioteca, grapas, tuberías, soportes y equipos.
+- Tres plantillas conceptuales de trenes de compresión y vistas de inspección/desarme.
+- CAD B-Rep V7: STEP/STP individual, bloques, placas perforadas, cilindros, tubos y booleanas exactas de piezas compatibles.
+- Proyectos offline con IndexedDB, copias JSON, exportación de imágenes, STL/GLB, plano visual A3, CSV de materiales e informe HTML.
+- Android con Capacitor, diseño adaptable y operación táctil.
+
+## Desarrollo
 
 ```bash
 npm install
@@ -32,24 +58,18 @@ npm run build
 npm run dev
 ```
 
-GitHub Actions compila la APK Android de pruebas con Capacitor. Node.js 22+ recomendado.
+La acción `.github/workflows/android-apk.yml` compila el APK Android **debug** a partir del mismo código. Node.js 22+ y Android SDK cuando se compila localmente.
 
-## Límites conocidos
+Pruebas nuevas: `tests/assembly-v8.test.mjs` valida restricciones, ciclos, traslaciones y detección de cruces de malla; `tests/browser-smoke.mjs` verifica navegación, creación de restricciones y panel de interferencias.
 
-- **B-Rep/STEP disponible únicamente para piezas creadas/importadas desde este nuevo módulo.** Los antiguos modelos conceptuales no se convierten automáticamente a sólidos CAD exactos.
-- STEP de **pieza individual**, no de ensamblaje multinivel. No se admite aún IGES.
-- Booleanas B-Rep de piezas con rotación 0°. Los casos complejos pueden generar errores topológicos. Las traslaciones sí están consideradas.
-- Croquis simples parametrizados, no un editor completo de restricciones geométricas. Quedan pendientes chaflanes, redondeos e historiales por operaciones.
-- Las dimensiones son nominales; la generación de B-Rep **no equivale a certificación de fabricante ni a un plano validado para fabricación**.
-- Conserva exportaciones de planos visuales orientativos; las cotas certificadas y tolerancias formales siguen en desarrollo.
-- La desinstalación de Android podría borrar los proyectos de IndexedDB. Exporta siempre tus JSON.
-- El proyecto incorpora OpenCascade en WASM; hay obligaciones de licencia LGPL que deben revisarse para distribuciones de producción. Consulta [avisos](licenses/THIRD-PARTY.md).
+## Limitaciones y próximos pasos
 
-## Próximas etapas
+- **Los anclajes genéricos no son referencias certificadas de fabricante**. Las cotas y las conexiones deben verificarse con planos autorizados antes de fabricar o montar.
+- Las restricciones V8 resuelven árboles de relaciones rígidas y parámetros simples. **No** incorporan un solucionador general de mecanismos con grados de libertad, juntas cinemáticas articuladas ni análisis de esfuerzos.
+- STEP se conserva a nivel de pieza B-Rep; no hay STEP de ensamblaje multinivel.
+- La medición de interferencias no reemplaza una revisión de tolerancias, análisis dimensional o verificación geométrica B-Rep.
+- V9: trenes de compresión con geometrías y referencias de fabricante autorizadas.
+- V10: planos ortogonales y cortes acotados, documentación formal y secuencias de desarme.
+- V11: instalador firmado estable, pruebas en tabletas físicas y recuperación robusta de proyectos.
 
-- V8: restricciones geométricas y mecánicas, referencias concéntricas, interferencias topológicas.
-- V9: trenes de compresión basados en modelos dimensionalmente verificados y autorizados.
-- V10: planos de fabricación con vistas, secciones y cotas/tolerancias precisas.
-- V11: firma Android estable, copias de seguridad y prueba en tabletas físicas.
-
-La app 2D autónoma original permanece en `standalone/TrazoTecnico_v1.html`.
+**Respaldo:** exporta siempre tus proyectos JSON antes de sustituir o desinstalar la APK, porque Android puede borrar los datos locales. La versión 2D autónoma sigue disponible en `standalone/TrazoTecnico_v1.html`.
