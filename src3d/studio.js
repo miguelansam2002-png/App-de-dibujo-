@@ -8,6 +8,7 @@ import {CAD_SOLIDS,validateCadSpec} from './cad-schema.js';
 import {cadCreate,cadImport,cadBoolean,cadExport,cadStop} from './cad-runtime.js';
 import {CONSTRAINT_KINDS,referenceAnchors,createConstraint,solveAssembly,shiftRigidGroup,worldAnchor,descendants} from './assembly-engine.js';
 import {scanInterferences,clearanceFromBounds} from './interference-v8.js';
+import {renderV9Workshop} from './v9-workshop.js';
 import './assembly-v8.css';
 import './studio.css';
 import './cad-ui.css';
@@ -22,7 +23,7 @@ export function createStudio(api){
  const root=by('viewportWrap');
  const backdrop=elm('div',{class:'studio-backdrop hidden',id:'studioBackdrop'});document.body.append(backdrop);
  const rail=elm('div',{class:'studio-rail',role:'toolbar','aria-label':'Herramientas de ingeniería'});
- const railActions=[['projects','▦','Proyectos'],['trains','⚙','Trenes'],['assembly','⇄','Montaje'],['tools','⌘','Ingeniería'],['docs','▧','Planos']];
+ const railActions=[['projects','▦','Proyectos'],['trains','⚙','Trenes'],['assembly','⇄','Montaje'],['workshop','◈','Equipos'],['tools','⌘','Ingeniería'],['docs','▧','Planos']];
  const railButtons=new Map();for(const [id,icon,label] of railActions){const button=elm('button',{type:'button',class:'studio-rail-btn','aria-label':label});button.append(elm('span',{class:'studio-rail-icon'},icon),elm('span',{},label));rail.append(button);railButtons.set(id,button)}
  root.append(rail);
  const top=elm('button',{type:'button',class:'studio-project-button',title:'Abrir gestor de proyectos'},'▦  PROYECTOS');
@@ -70,7 +71,7 @@ export function createStudio(api){
   const cards=elm('div',{class:'studio-template-grid'});for(const t of TRAIN_PRESETS){const c=elm('div',{class:'studio-template-card'});c.append(elm('span',{class:'studio-template-icon'},t.icon),elm('strong',{},t.title),elm('p',{},t.subtitle),elm('small',{},`Envolvente de bancada: ${format(t.length)} mm`));action(c,'Insertar tren',async()=>{if(api.items().length>1&&!confirm('¿Añadir este tren al diseño actual? Puedes guardarlo antes.'))return;
    api.checkpoint();const preset=buildTrainPreset(t.id,api.standardPart,{offset:api.items().length>1?[0,0,-4800]:[0,0,0]});const preserved=api.items().length===1&&api.items()[0].type==='pipe'?[]:api.items();api.replaceItems([...preserved,...preset.items],by('projectName').value==='Nuevo diseño 3D'?preset.title:undefined);close();api.fitScene();showToast(`Tren añadido: ${preset.items.length} componentes`);
   },'studio-action primary');cards.append(c)}body.append(cards);
-  const sub=section(body,'Explorar piezas individuales','Las familias nuevas están integradas en la biblioteca junto con los 99 componentes anteriores.');action(sub,'Abrir biblioteca 3D',()=>{close();by('libraryPanel').classList.add('open')});
+  const sub=section(body,'Explorar piezas individuales','Las familias nuevas están integradas en la biblioteca junto con los 99 componentes anteriores.');action(sub,'Abrir biblioteca 3D',()=>{close();by('libraryPanel').classList.add('open')});action(sub,'Taller V9 · despiece y fichas',()=>openTools('workshop'),'studio-action primary');
  }
  function renderTree(body){if(!body)return;body.replaceChildren();const groups=groupByAssembly(api.items());for(const g of groups){const sec=section(body,`${g.name} · ${g.items.length}`,g.id==='_libres'?'Piezas independientes':'Conjunto manipulable de piezas');
   const list=elm('div',{class:'studio-tree-list'});for(const p of g.items){const row=elm('div',{class:'studio-tree-row'});const name=action(row,`${p.hidden?'◌':'◉'} ${(p.joint||p.constraint)?'🔗 ':''}${p.name}`,()=>{api.selectPart(p.id);api.focusSelected();renderSummary()},'studio-tree-select');row.append(elm('small',{},p.metadata?.equipmentTag||p.type));action(row,p.hidden?'Ver':'Ocultar',()=>toggleHidden(p.id),'studio-small');list.append(row)}sec.append(list);
@@ -185,8 +186,9 @@ export function createStudio(api){
 
  function openTools(tab='tree'){
   const panel=newPanel('Herramientas de ingeniería','Selecciona, inspecciona y documenta conjuntos mecánicos.',true);panel.dataset.panel='tree';const nav=elm('div',{class:'studio-tool-tabs'});const body=elm('div',{class:'studio-panel-body'});panel.append(nav,body);
-  const tabs=[['tree','Conjuntos'],['assembly','Montaje'],['collision','Interferencias'],['inspect','Inspección'],['brep','CAD exacto'],['cad','CAD malla'],['measure','Medición']];
+  const tabs=[['workshop','Compresión V9'],['tree','Conjuntos'],['assembly','Montaje'],['collision','Interferencias'],['inspect','Inspección'],['brep','CAD exacto'],['cad','CAD malla'],['measure','Medición']];
   function switchTab(key){nav.replaceChildren();for(const [id,label] of tabs){const b=action(nav,label,()=>switchTab(id),'studio-tab'+(id===key?' active':''));}body.replaceChildren();panel.dataset.panel=key;
+   if(key==='workshop'){renderV9Workshop(body,api,{explode,restoreExploded,close});return}
    if(key==='tree'){renderTree(body);return}
    if(key==='assembly'){renderAssemblyPanel(body);return}
    if(key==='collision'){renderCollisionPanel(body);return}
@@ -260,7 +262,7 @@ export function createStudio(api){
  }
  stepInput.addEventListener('change',async()=>{const file=stepInput.files?.[0];if(!file)return;try{showToast('Importando B-Rep STEP…');const result=await cadImport(file);const part=api.standardPart('custom_mesh',api.items().length);part.name=file.name.replace(/\.(step|stp)$/i,'').slice(0,80);part.asset=result.asset;part.pos=result.center;part.dims=result.dims;part.cad={kind:'brep',stepSource:result.stepSource,origin:result.center,spec:{kind:'importSTEP',fileName:file.name}};part.metadata={sourceFile:file.name,sourceFormat:'STEP B-Rep',validation:'SIN VERIFICAR',unit:'mm'};api.checkpoint();api.appendPart(part);api.selectPart(part.id);api.focusSelected();showToast('STEP cargado en formato B-Rep · exportación disponible');close();}catch(e){console.error(e);showToast('Error STEP: '+e.message)}finally{stepInput.value=''}});
  fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;try{showToast('Procesando modelo 3D…');const imported=await importMeshFile(file,fileInput.dataset.units||'mm');const piece=api.standardPart('custom_mesh',api.items().length);piece.name=file.name.slice(0,75);piece.asset=imported.asset;piece.pos=imported.center;piece.dims=imported.dims;piece.metadata={sourceFile:file.name,sourceFormat:imported.sourceFormat,validation:'NO VERIFICADO'};api.checkpoint();api.appendPart(piece);api.selectPart(piece.id);api.focusSelected();showToast('Modelo STL/GLB importado. Revisa sus unidades y geometría.')}catch(e){console.error(e);showToast('Error de importación: '+e.message)}finally{fileInput.value=''}});
- railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('assembly').onclick=()=>openTools('assembly');railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
+ railButtons.get('projects').onclick=openProjects;railButtons.get('trains').onclick=openTrains;railButtons.get('assembly').onclick=()=>openTools('assembly');railButtons.get('workshop').onclick=()=>openTools('workshop');railButtons.get('tools').onclick=()=>openTools('tree');railButtons.get('docs').onclick=openDocs;top.onclick=openProjects;
  window.addEventListener('keydown',e=>{if(e.key==='Escape')close();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();persist().then(()=>showToast('Proyecto guardado localmente'))}});
  renderSummary();return {snapshotMeta,restore,changed,openProjects,openTrains,openTools,openDocs,close,persist};
 }
