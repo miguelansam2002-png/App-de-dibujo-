@@ -78,7 +78,24 @@ try{
   await page.getByRole('button',{name:'Proyectos',exact:true}).click();
   assert.ok(await page.getByText('Mis proyectos', {exact:true}).isVisible());
   await page.locator('.studio-close').click();
+  // V8: crear una restriccion rigida con dos piezas y persistirla al proyecto.
+  await page.getByRole('button',{name:'Montaje',exact:true}).click();
+  assert.ok(await page.getByText('Restricciones mecánicas').isVisible());
+  const selection=await page.evaluate(()=>{const data=JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3'));return {first:data.items[0].id,last:data.items.at(-1).id}});
+  await page.locator('#assemblyChild').selectOption(selection.last);
+  await page.locator('#assemblyParent').selectOption(selection.first);
+  await page.locator('#assemblyType').selectOption('fixed');
+  await page.getByRole('button',{name:'Crear restricción'}).click();
+  const mat=await page.evaluate(()=>JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3')).items.at(-1).constraint);
+  assert.equal(mat.kind,'fixed','Debe guardar restriccion rigida');
+  assert.equal(mat.targetId,selection.first,'Debe conservar el objetivo de ensamblaje');
+  await page.screenshot({path:'qa-screenshots/montaje-v8.png'});
+  await page.getByRole('button',{name:'Ingeniería',exact:true}).click();
+  await page.getByRole('button',{name:'Interferencias',exact:true}).click();
+  assert.ok(await page.getByText('Interferencias entre superficies').isVisible());
+  await page.screenshot({path:'qa-screenshots/interferencias-v8.png'});
+  await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
-  console.log('Pruebas UI V7: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
+  console.log('Pruebas UI V8: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
