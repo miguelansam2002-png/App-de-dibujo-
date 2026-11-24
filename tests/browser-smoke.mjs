@@ -28,10 +28,14 @@ try{
  assert.equal(await page.locator('.v12-model-card').count(),1);
  await page.screenshot({path:'qa-screenshots/v13-biblioteca.png'});
  await page.locator('.v12-model-card .v12-model-add').first().click();
+ await page.waitForFunction(()=>document.querySelector('#elementCount')?.textContent==='2',null,{timeout:15000});
  assert.ok(await page.locator('body').evaluate(el=>el.classList.contains('v12-design')),'Seleccionar Usar abre el estudio');
  assert.equal(await page.locator('#elementCount').innerText(),'2','Agregar pieza produce un nuevo componente');
  assert.ok((await page.locator('#selectedType').innerText()).includes('GRAPA OMEGA'));
  await page.screenshot({path:'qa-screenshots/v13-estudio.png'});
+ assert.ok(await page.locator('#viewport canvas').isVisible(),'El visor 3D debe permanecer visible');
+ assert.ok(await page.locator('#viewport canvas').evaluate(el=>el.width>100&&el.height>100),'El canvas CAD necesita dimensiones útiles');
+ assert.equal(await page.locator('body.v12-design .v12-home-button:visible').count(),0,'No deben duplicarse controles de inicio');
  await page.getByRole('button',{name:/Propiedades/}).first().click();
  assert.ok(await page.locator('#inspectorPanel').isVisible());
  await page.getByRole('button',{name:/Añadir pieza/}).click();
@@ -54,6 +58,7 @@ try{
  assert.ok(await tablet.getByRole('button',{name:/Entrar al estudio/}).isVisible());
  await tablet.getByRole('button',{name:/Entrar al estudio/}).click();
  assert.ok(await tablet.locator('.v12-quick').isVisible());
+ await tablet.getByRole('button',{name:'Biblioteca 3D',exact:true}).first().click().catch(()=>{});
  await tablet.screenshot({path:'qa-screenshots/v13-tableta.png'});
  assert.deepEqual(errors,[],'Sin errores de JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Sin errores JavaScript en tableta');
  console.log('V13: inicio, catálogo independiente, edición, herramientas avanzadas y tableta OK');
