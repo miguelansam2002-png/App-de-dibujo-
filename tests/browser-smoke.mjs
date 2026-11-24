@@ -20,10 +20,10 @@ try{
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
-  assert.equal(await page.locator('.part-card').count(),120,'El catálogo debe mostrar 120 componentes disponibles');
-  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V8 listo'),true);
+  assert.equal(await page.locator('.part-card').count(),138,'El catálogo debe mostrar 138 componentes disponibles');
+  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V9 listo'),true);
   await page.waitForTimeout(600);
-  assert.ok(await page.locator('.part-card[data-part-type]').count()===120,'Cada tarjeta debe ofrecer identificador');
+  assert.ok(await page.locator('.part-card[data-part-type]').count()===138,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
   await page.locator('#librarySearch').fill('omega');
   assert.equal(await page.locator('.part-card').count(),1);
@@ -95,7 +95,20 @@ try{
   assert.ok(await page.getByText('Interferencias entre superficies').isVisible());
   await page.screenshot({path:'qa-screenshots/interferencias-v8.png'});
   await page.locator('.studio-close').click();
+  // V9: configurar despiece de rotor, revisar fichas y navegar por piezas.
+  await page.getByRole('button',{name:'Equipos',exact:true}).click();
+  assert.ok(await page.getByText('Taller de compresión 3D').isVisible());
+  await page.getByLabel('Etapas (1–10)').fill('3');
+  await page.screenshot({path:'qa-screenshots/taller-v9.png'});
+  await page.locator('.v9-actions .v9-btn.primary').first().click();
+  const v9=await page.evaluate(()=>JSON.parse(localStorage.getItem('trazo-tecnico-3d-project-v3')));
+  assert.equal(v9.items.filter(x=>x.type==='v9_impeller_closed').length,3);
+  assert.ok(v9.items.some(x=>x.type==='v9_casing_upper'));
+  assert.ok(await page.getByText('Ficha técnica de componente').isVisible());
+  await page.screenshot({path:'qa-screenshots/despiece-v9.png'});
+  await page.getByRole('button',{name:'Guardar ficha técnica'}).click();
+  await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
-  console.log('Pruebas UI V8: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
+  console.log('Pruebas UI V9: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
