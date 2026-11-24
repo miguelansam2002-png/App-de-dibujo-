@@ -13,6 +13,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  let page='home',mode='all',search='',category='Todos',favorites=readArray(favoritesKey),recent=readArray(RECENT_KEY),firstDesign=true;
  const home=document.createElement('div');home.id='v12-shell';home.className='v12-shell';document.body.append(home);
  const quick=h('div','v12-quick');quick.id='v12-quick';document.body.append(quick);
+ const advancedRail=document.querySelector('.studio-rail');if(advancedRail)document.body.append(advancedRail);
  const nav=h('nav','v12-nav');nav.setAttribute('aria-label','Navegación principal');
  const navItems=[['home','Inicio'],['library','Biblioteca 3D'],['design','Estudio de diseño']];
  for(const [key,name] of navItems){const b=button('v12-nav-button',name,()=>go(key));b.dataset.page=key;nav.append(b)}
