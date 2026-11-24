@@ -59,7 +59,7 @@ function connectParts(sourceId,targetId,portA,portB){
  const joint=createJoint(child,target,portA,portB);
  if(!joint){notify('Sin bocas compatibles: comprueba diámetro y tipo de pieza');return false}
  checkpoint();child.joint={targetId:joint.targetId,selfPort:joint.selfPort,targetPort:joint.targetPort};
- child.pos=joint.transform.pos;child.rot=joint.transform.rot;joinSource=null;
+ child.pos=joint.transform.pos;child.rot=joint.transform.rot;joinSource=null;$('btnJoinTap').classList.remove('armed');$('joinBtn').classList.remove('armed');
  refreshScene();selectPart(child.id);focusSelected();
  notify('✓ '+child.name+' unida a '+target.name+' · ambas piezas están vinculadas');return true;
 }
@@ -157,6 +157,21 @@ function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color('#132
  transform=new TransformControls(camera,renderer.domElement);transform.setSize(1.05);transform.setTranslationSnap(10);transform.addEventListener('dragging-changed',e=>{controls.enabled=!e.value});transform.addEventListener('objectChange',()=>{const data=items.find(p=>p.id===selected),group=models.get(selected);if(!data||!group)return;data.pos=group.position.toArray().map(v=>Math.round(v*10)/10);data.rot=[group.rotation.x,group.rotation.y,group.rotation.z].map(v=>Math.round(THREE.MathUtils.radToDeg(v)*10)/10);for(const prefix of ['pos','rot'])for(let i=0;i<3;i++)$(prefix+['X','Y','Z'][i]).value=data[prefix][i];render()});let original=null;transform.addEventListener('mouseDown',()=>{original=JSON.stringify(items);const part=items.find(p=>p.id===selected);if(part)delete part.joint});transform.addEventListener('mouseUp',()=>{if(original&&original!==JSON.stringify(items)){history.push(original);if(history.length>45)history.shift();future=[];saveLocal();refreshUndo()}original=null});scene.add(transform.getHelper());raycaster=new THREE.Raycaster();
 
  const canvas=renderer.domElement;let drag=null;const touches=new Set();
+ snapMarker=new THREE.Mesh(new THREE.SphereGeometry(12,18,12),new THREE.MeshBasicMaterial({color:0x5ff4be,transparent:true,opacity:.85,depthTest:false}));
+ snapMarker.visible=false;snapMarker.renderOrder=100;scene.add(snapMarker);
+ function dragSnapCandidate(current,pos,rot){
+  const preview={...current,pos,rot},worldPerPixel=camera.position.distanceTo(new THREE.Vector3(...pos))*Math.tan(THREE.MathUtils.degToRad(camera.fov)/2)*2/Math.max(100,root.clientHeight);
+  const maxDistance=Math.max(22,Math.min(230,worldPerPixel*42));
+  let best=null,minimum=Infinity;
+  for(const target of items){if(target.id===current.id)continue;
+   const joint=createJoint(preview,target);if(!joint)continue;
+   const a=portsFor(preview).find(p=>p.id===joint.selfPort),b=portsFor(target).find(p=>p.id===joint.targetPort);
+   if(!a||!b)continue;
+   const distance=worldPort(preview,a).position.distanceTo(worldPort(target,b).position);
+   if(distance<minimum&&distance<maxDistance){minimum=distance;best={joint,target,point:worldPort(target,b).position}}
+  }
+  return best;
+ }
  function pointerRay(e){const rect=canvas.getBoundingClientRect();const point=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(point,camera);return raycaster.ray}
  function hitPart(e){pointerRay(e);const hits=raycaster.intersectObjects(modelRoot.children,true);if(!hits.length)return null;let obj=hits[0].object;while(obj&&!obj.userData.partId)obj=obj.parent;return obj?.userData.partId||null}
  function planeFor(part){const normal={xz:[0,1,0],xy:[0,0,1],yz:[1,0,0]}[$('movePlane').value]||[0,1,0];const n=new THREE.Vector3(...normal);const view=camera.getWorldDirection(new THREE.Vector3());if(Math.abs(view.dot(n))<.12)n.copy(view).negate();return new THREE.Plane().setFromNormalAndCoplanarPoint(n,new THREE.Vector3(...part.pos))}
@@ -168,21 +183,32 @@ function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color('#132
   if(!id||interactionMode!=='move'){drag=null;return}
   const part=items.find(x=>x.id===id),group=models.get(id);if(!part||!group)return;
   const plane=planeFor(part),at=new THREE.Vector3();if(!pointerRay(e).intersectPlane(plane,at))return;
-  drag={id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,original:JSON.stringify(items),start:group.position.clone(),offset:group.position.clone().sub(at),plane,moved:false};
+  drag={id,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,original:JSON.stringify(items),start:group.position.clone(),originalRot:[...part.rot],offset:group.position.clone().sub(at),plane,moved:false,candidate:null};
   controls.enabled=false;try{canvas.setPointerCapture(e.pointerId)}catch(err){}
  });
  canvas.addEventListener('pointermove',e=>{
   if(!drag||drag.pointerId!==e.pointerId||touches.size>1)return;
   if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5)return;
-  drag.moved=true;const at=new THREE.Vector3();if(!pointerRay(e).intersectPlane(drag.plane,at))return;
+  if(!drag.moved){drag.moved=true;const item=items.find(p=>p.id===drag.id);if(item)delete item.joint}const at=new THREE.Vector3();if(!pointerRay(e).intersectPlane(drag.plane,at))return;
   const next=at.add(drag.offset);const snap=getSnap();if(snap>0)next.set(Math.round(next.x/snap)*snap,Math.round(next.y/snap)*snap,Math.round(next.z/snap)*snap);
   const data=items.find(x=>x.id===drag.id),group=models.get(drag.id);if(!data||!group)return;
-  data.pos=next.toArray().map(v=>Math.round(v*100)/100);group.position.copy(next);
-  ['X','Y','Z'].forEach((axis,i)=>$('pos'+axis).value=data.pos[i]);status('Moviendo · X '+data.pos[0]+' · Y '+data.pos[1]+' · Z '+data.pos[2]+' mm');render();
+  const candidate=dragSnapCandidate(data,next.toArray(),drag.originalRot);drag.candidate=candidate;
+  if(candidate){data.pos=candidate.joint.transform.pos;data.rot=candidate.joint.transform.rot;
+   group.position.fromArray(data.pos);group.rotation.set(...data.rot.map(THREE.MathUtils.degToRad));
+   snapMarker.position.copy(candidate.point);snapMarker.visible=true;
+   status('◉ Encaje detectado · suelta para unir con '+candidate.target.name);
+  }else{data.pos=next.toArray().map(v=>Math.round(v*100)/100);data.rot=[...drag.originalRot];group.position.copy(next);
+   group.rotation.set(...data.rot.map(THREE.MathUtils.degToRad));snapMarker.visible=false;
+   status('Moviendo · X '+data.pos[0]+' · Y '+data.pos[1]+' · Z '+data.pos[2]+' mm');
+  }
+  ['X','Y','Z'].forEach((axis,i)=>{ $('pos'+axis).value=data.pos[i];$('rot'+axis).value=data.rot[i]});render();
  });
  function endDrag(e){touches.delete(e.pointerId);if(!drag||drag.pointerId!==e.pointerId){if(!touches.size&&interactionMode!=='rotate')controls.enabled=true;return}
-  const old=drag.original,moved=drag.moved;drag=null;controls.enabled=true;
-  if(moved&&old!==JSON.stringify(items)){history.push(old);if(history.length>45)history.shift();future=[];refreshUndo();saveLocal();updateList();status('Pieza ubicada · posición guardada')}
+  const old=drag.original,moved=drag.moved,candidate=drag.candidate,id=drag.id;drag=null;controls.enabled=true;snapMarker.visible=false;
+  if(moved){const data=items.find(p=>p.id===id);if(data&&candidate)data.joint={targetId:candidate.joint.targetId,selfPort:candidate.joint.selfPort,targetPort:candidate.joint.targetPort};
+   if(old!==JSON.stringify(items)){history.push(old);if(history.length>45)history.shift();future=[];refreshUndo()}
+   syncModels();updateList();refreshJoinUI();saveLocal();status(candidate?'Piezas unidas y vinculadas · puedes seguir editando':'Pieza ubicada · posición guardada')}
+  render()}
  }
  canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
  const resize=new ResizeObserver(()=>{const w=root.clientWidth,h=root.clientHeight;if(w<1||h<1)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);render()});resize.observe(root);
