@@ -124,6 +124,11 @@ try{
   await page.getByRole('button',{name:'Actualizar vista previa'}).click();
   await page.locator('.v10-preview svg').waitFor({timeout:60000});
   await page.screenshot({path:'qa-screenshots/plano-v10.png'});
+  // V10: comprobación real de descarga PDF vectorial, no solo existencia del botón.
+  const pdfDownload=page.waitForEvent('download',{timeout:60000});
+  await page.getByRole('button',{name:'Exportar PDF vectorial'}).click();
+  const pdf=await pdfDownload;
+  assert.ok(pdf.suggestedFilename().endsWith('.pdf'),'Exportar plano PDF debe producir descarga');
   await page.getByRole('button',{name:'Inspección',exact:true}).click();
   assert.ok(await page.getByText('Registro de inspección por componente').isVisible());
   await page.getByLabel('Inspector / responsable').fill('Inspección de prueba');
