@@ -8,7 +8,8 @@ import {buildV9Preset} from '../src3d/v9-technical.js';
 
 test('biblioteca V9 contiene 18 modelos mecánicos registrados sin duplicaciones',()=>{
  assert.equal(V9_PARTS.length,18);
- assert.equal(CATALOG.length,138);
+ assert.equal(CATALOG.length,139);
+ assert.equal(CATALOG.filter(x=>x.type!=='custom_mesh').length,138);
  assert.equal(new Set(CATALOG.map(x=>x.type)).size,CATALOG.length);
  for(const def of V9_PARTS)assert.ok(TRAIN_PARTS.some(x=>x.type===def.type));
 });
