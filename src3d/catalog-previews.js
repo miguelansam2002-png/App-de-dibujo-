@@ -62,3 +62,9 @@ export function bindCatalogPreviews(target,makePart,releasePart,standardPart){
  observer=new IntersectionObserver(entries=>{for(const e of entries){if(!e.isIntersecting)continue;const el=e.target,icon=el.querySelector('.part-icon');if(!icon||icon.classList.contains('preview-loaded'))continue;schedule(el.dataset.partType,icon,makePart,releasePart,standardPart);observer.unobserve(el)}},{root:target,rootMargin:'50px 0px',threshold:.01});
  cards.forEach(card=>observer.observe(card));
 }
+// Al entrar al CAD liberar el segundo contexto WebGL para evitar pantallas en blanco
+// en Android System WebView (límite de contextos de GPU).
+export function pauseCatalogPreviews(){
+ observer?.disconnect();observer=null;queue.length=0;run=false;
+ if(renderer){try{renderer.dispose();renderer.forceContextLoss()}catch(error){console.warn('Preview cleanup',error)}renderer=null;scene=null;camera=null}
+}
