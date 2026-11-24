@@ -89,3 +89,11 @@
  .touch-dock button{min-width:54px}
 }
 @media(max-width:440px){.hud-actions #joinBtn{min-width:49px}.hud-actions{gap:3px}.mode-pill{display:none}.viewport-hint{font-size:8px}}
+
+/* V4 tableta: cinco herramientas siempre en una sola fila */
+@media(max-width:950px){
+ .touch-dock{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:58px;overflow:hidden;align-items:stretch}
+ .touch-dock button{min-width:0;width:100%;height:58px;max-height:58px;padding:4px 1px;gap:2px;align-self:center}
+ .touch-dock button span{display:block;white-space:nowrap;font-size:10px}
+}
+@media(max-width:380px){.touch-dock button span{font-size:9px}}

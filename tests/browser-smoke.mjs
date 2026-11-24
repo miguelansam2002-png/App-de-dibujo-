@@ -52,6 +52,8 @@ try{
   assert.equal(unlinked.items[2].joint,undefined,'Separar conserva pieza independiente');
   const tablet=await browser.newPage({viewport:{width:820,height:1180},hasTouch:true,isMobile:true,deviceScaleFactor:1}),mobileErrors=[];
   tablet.on('pageerror',e=>mobileErrors.push(String(e)));await tablet.goto(base);await tablet.locator('#viewport canvas').waitFor({timeout:20000});
+  const dockOne=await tablet.locator('#dockJoin').boundingBox(),dockLast=await tablet.locator('#dockInspect').boundingBox();
+  assert.ok(dockOne&&dockLast&&Math.abs(dockOne.y-dockLast.y)<3,'Los cinco botones de la barra táctil deben estar en una sola fila');
   await tablet.screenshot({path:'qa-screenshots/tablet.png'});
   await tablet.locator('#dockLibrary').click();
   assert.ok(await tablet.locator('#libraryPanel').evaluate(el=>el.classList.contains('open')));
