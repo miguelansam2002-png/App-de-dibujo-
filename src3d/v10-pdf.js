@@ -1,6 +1,6 @@
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import 'svg2pdf.js';
+// svg2pdf exige DOM de navegador; cargar solo al solicitar un plano PDF.
 import {billOfMaterials} from './studio-core.js';
 import {normalizeDocumentMeta,compileInspectionRows,evidenceSummary} from './v10-records.js';
 
@@ -10,6 +10,8 @@ export async function drawingSVGtoPDF(svgSource,size='A3'){
  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:size==='A4'?'a4':'a3',compress:true});
  const root=new DOMParser().parseFromString(svgSource,'image/svg+xml').documentElement;
  if(root.querySelector('parsererror'))throw Error('El SVG contiene caracteres no válidos');
+ await import('svg2pdf.js');
+ if(typeof pdf.svg!=='function')throw Error('El módulo de conversión vectorial SVG a PDF no está disponible');
  await pdf.svg(root,{x:0,y:0,width:mm[0],height:mm[1]});
  return pdf.output('blob');
 }
