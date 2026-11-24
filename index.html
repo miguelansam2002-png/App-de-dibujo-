@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#102a42" />
+<title>Trazo Técnico | Estudio de ingeniería</title>
+<link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brandmark" id="brandIcon"></div><div><h1>TRAZO TÉCNICO</h1><small>ESTUDIO DE INGENIERÍA · EDICIÓN 2D</small></div></div>
+    <input id="docName" class="docname" value="Plano de soporte de tubería" aria-label="Nombre del plano" maxlength="90" />
+    <div class="top-actions">
+      <button class="topbtn mobile-only" data-action="toggle-left" title="Herramientas"><span class="icon-slot" data-icon="menu"></span></button>
+      <button class="topbtn hide-sm" data-action="new"><span class="icon-slot" data-icon="file-plus"></span><span>Nuevo</span></button>
+      <button class="topbtn hide-sm" data-action="open"><span class="icon-slot" data-icon="folder-open"></span><span>Abrir</span></button>
+      <button class="topbtn" data-action="save" title="Guardar proyecto editable"><span class="icon-slot" data-icon="save"></span><span>Guardar</span></button>
+      <button class="topbtn primary" data-action="export" title="Exportar imagen SVG"><span class="icon-slot" data-icon="download"></span><span>Exportar</span></button>
+      <button class="topbtn mobile-only" data-action="toggle-right" title="Propiedades"><span class="icon-slot" data-icon="sliders"></span></button>
+    </div>
+  </header>
+  <div class="work" id="work">
+    <aside class="left" id="left">
+      <div class="sidebar-heading"><strong>Herramientas</strong><button class="iconbtn mobile-only" data-action="toggle-left" title="Cerrar menú"><span class="icon-slot" data-icon="x"></span></button></div>
+      <div class="tools" id="tools"></div>
+      <div class="eyebrow">Biblioteca de componentes</div>
+      <div id="library"></div>
+      <div class="eyebrow">Modelos de ejemplo</div>
+      <div id="templates"></div>
+      <div class="hint-box"><b>Diseñado para bocetos técnicos.</b> Coloca piezas, dibuja tuberías, agrega cotas y modifica sus medidas. Usa un equipo CAD especializado para cálculos normativos o fabricación.</div>
+    </aside>
+    <section class="center" aria-label="Área de dibujo">
+      <div class="canvas-toolbar">
+        <div class="toolbar-group">
+          <button class="iconbtn" data-action="undo" title="Deshacer (Ctrl+Z)" id="undoBtn"><span class="icon-slot" data-icon="undo"></span></button>
+          <button class="iconbtn" data-action="redo" title="Rehacer (Ctrl+Y)" id="redoBtn"><span class="icon-slot" data-icon="redo"></span></button>
+          <div class="separator first"></div>
+          <button class="iconbtn active" data-action="grid" title="Mostrar u ocultar cuadrícula" id="gridBtn"><span class="icon-slot" data-icon="grid"></span></button>
+          <button class="iconbtn active" data-action="snap" title="Ajustar a cuadrícula" id="snapBtn"><span class="icon-slot" data-icon="magnet"></span></button>
+          <span class="chip" id="unitChip">Unidad: mm</span>
+        </div>
+        <div class="toolbar-group"><span class="chip" id="toolLabel">Seleccionar</span><button class="iconbtn" data-action="fit" title="Ajustar vista"><span class="icon-slot" data-icon="maximize"></span></button><button class="iconbtn" data-action="help" title="Ayuda"><span class="icon-slot" data-icon="circle-help"></span></button></div>
+      </div>
+      <div class="canvas-outer" id="canvasOuter" data-tool="select"><svg id="drawing" xmlns="http://www.w3.org/2000/svg" aria-label="Lienzo interactivo"></svg><div class="canvas-tip" id="canvasTip">Haz clic en un elemento para editar sus medidas.</div><div class="floating-zoom"><button data-action="zoom-out" title="Alejar"><span class="icon-slot" data-icon="minus"></span></button><span class="zoomval" id="zoomLabel">100%</span><button data-action="zoom-in" title="Acercar"><span class="icon-slot" data-icon="plus"></span></button></div><div class="bottom-mobile" id="mobileTools"></div></div>
+      <div class="statusbar"><span id="coords">X: 0 mm · Y: 0 mm</span><span id="count">0 elementos</span><span><b id="statusSnap">● Ajuste activo</b></span></div>
+    </section>
+    <aside class="right" id="right"><div class="right-header"><h3>Panel de propiedades</h3><button class="iconbtn mobile-only" data-action="toggle-right" title="Cerrar panel"><span class="icon-slot" data-icon="x"></span></button><span class="badge" id="selectionBadge">Plano</span></div><div id="inspector"></div></aside>
+  </div>
+</div>
+<input id="openFile" type="file" accept=".json,application/json" hidden />
+<div class="modal-backdrop" id="helpModal"><div class="modal"><h2>Guía rápida de Trazo Técnico</h2><p>Una herramienta sencilla para construir bocetos y planos 2D de tuberías, soportes y piezas mecánicas.</p><ol><li>Elige <b>Tubería</b>, <b>Línea</b>, <b>Rectángulo</b> o <b>Cota</b>, y arrastra sobre el lienzo.</li><li>Selecciona una <b>pieza precargada</b> (grapa, codo, brida, válvula, soporte...) y toca el punto en que quieres insertarla.</li><li>Con <b>Seleccionar</b>, toca cualquier elemento para moverlo o editar sus coordenadas y tamaños en Propiedades.</li><li>Activa o desactiva <b>Ajuste a cuadrícula</b> y usa las unidades <b>mm / cm / m / pulgadas</b>.</li><li>Usa <b>Guardar</b> para obtener un archivo editable .json, o <b>Exportar</b> para SVG, PNG e impresión/PDF.</li></ol><p><b>Atajos:</b> Supr para eliminar; Ctrl+Z / Ctrl+Y para deshacer o rehacer; Escape para seleccionar; flechas para mover piezas; rueda del mouse para hacer zoom.</p><p><b>Importante:</b> se conservan automáticamente los cambios en este navegador, siempre que el almacenamiento local esté disponible. También conviene guardar copias .json.</p><div class="modal-actions"><button class="topbtn primary" data-action="close-help">Entendido</button></div></div></div>
+<div class="modal-backdrop" id="exportModal"><div class="modal"><h2>Exportar plano</h2><p>Selecciona cómo quieres compartir el dibujo. El SVG conserva las líneas vectoriales y el PNG genera una imagen nítida.</p><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="template" data-action="export-svg"><strong>Plano vectorial SVG</strong><small>Ideal para edición y máxima calidad</small></button><button class="template" data-action="export-png"><strong>Imagen PNG</strong><small>Ideal para WhatsApp e informes</small></button><button class="template" data-action="print"><strong>Imprimir / Guardar PDF</strong><small>Mediante el diálogo del navegador</small></button><button class="template" data-action="save"><strong>Proyecto editable JSON</strong><small>Para seguir modificándolo después</small></button></div><div class="modal-actions"><button class="smallbtn" style="flex:0 0 110px" data-action="close-export">Cerrar</button></div></div></div>
+<div class="toast" id="toast"></div>
+<script src="./src/app.js" defer></script>
+</body>
+</html>
