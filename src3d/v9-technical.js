@@ -90,9 +90,9 @@ export function normalizeV9Record(raw={}){
  const r={subsystem:'',stage:0,validation:'CONCEPTUAL',manufacturer:'',partNumber:'',serialNumber:'',drawingRef:'',revision:'',material:'',observation:'',sourceUrl:'',verifiedBy:'',verifiedOn:''};
  for(const k of FIELDS){if(k==='stage'){const n=Number(raw.stage);r.stage=Number.isInteger(n)&&n>=0&&n<=30?n:0}else if(k==='validation')r.validation=['CONCEPTUAL','DOCUMENTADO_SIN_VALIDAR','CONTRASTADO'].includes(raw.validation)?raw.validation:'CONCEPTUAL';else r[k]=text(raw[k],k==='observation'?900:180)}
  // 'CONTRASTADO' requires traceable evidence and identification, never implies OEM certification.
- if(r.validation==='CONTRASTADO'&&(!r.drawingRef||!r.verifiedBy||!r.verifiedOn||!r.partNumber))r.validation='DOCUMENTADO_SIN_VALIDAR';
  if(r.sourceUrl&&!/^https:\/\//i.test(r.sourceUrl))r.sourceUrl='';
  if(r.verifiedOn&&!/^\d{4}-\d{2}-\d{2}$/.test(r.verifiedOn))r.verifiedOn='';
+ if(r.validation==='CONTRASTADO'&&(!r.drawingRef||!r.verifiedBy||!r.verifiedOn||!r.partNumber))r.validation='DOCUMENTADO_SIN_VALIDAR';
  return r;
 }
 function safeCsv(value){const v=String(value??'').replace(/\r?\n/g,' ');const guarded=/^[\s]*[=+@-]/.test(v)?`'${v}`:v;return '"'+guarded.replaceAll('"','""')+'"'}
