@@ -96,7 +96,7 @@ try{
   await page.screenshot({path:'qa-screenshots/interferencias-v8.png'});
   await page.locator('.studio-close').click();
   // V9: configurar despiece de rotor, revisar fichas y navegar por piezas.
-  await page.getByRole('button',{name:'Equipos',exact:true}).click();
+  await page.locator('.studio-rail-btn[aria-label="Equipos"]').click();
   assert.ok(await page.getByText('Taller de compresión 3D').isVisible());
   await page.getByLabel('Etapas (1–10)').fill('3');
   await page.screenshot({path:'qa-screenshots/taller-v9.png'});
