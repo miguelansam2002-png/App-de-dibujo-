@@ -7,12 +7,13 @@ import {Capacitor} from '@capacitor/core';
 import {Filesystem,Directory} from '@capacitor/filesystem';
 import {Share} from '@capacitor/share';
 import {CATALOG,PIPE_SIZES,MATERIALS,partDefinition,DIMENSION_NAMES,INTEGER_DIMS,makePart,releasePart,standardPart} from './parts.js';
+import {portsFor,bestJoint,jointFromIds,worldPort} from './connections.js';
 import './ui.css';
 
 const $=id=>document.getElementById(id);
 const KEY='trazo-tecnico-3d-project-v3';
 const LEGACY_KEY='trazo-tecnico-3d-project-v2';
-let interactionMode='move';
+let interactionMode='move',joinSource=null,snapMarker=null;
 const root=$('viewport');
 let renderer,scene,camera,controls,transform,modelRoot,grid,axes,raycaster;
 let items=[],selected=null,activeCategory='Todos',history=[],future=[],models=new Map(),touchStart=null,toastTimeout=0;
@@ -20,14 +21,72 @@ const MAX_ITEMS=500;
 function notify(message){const el=$('toast');el.textContent=message;el.classList.remove('hidden');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.add('hidden'),3200)}
 function status(message){$('status').textContent=message}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(getProject()))}catch(e){status('Usa Guardar para preservar el proyecto')}}
-function getProject(){return {format:'trazo-tecnico-3d',version:3,units:'mm',name:$('projectName').value.trim()||'Proyecto 3D',items:structuredClone(items)}}
+function getProject(){return {format:'trazo-tecnico-3d',version:4,units:'mm',name:$('projectName').value.trim()||'Proyecto 3D',items:structuredClone(items)}}
 function checkpoint(){history.push(JSON.stringify(items));if(history.length>45)history.shift();future=[];refreshUndo()}
 function refreshUndo(){$('undoBtn').disabled=!history.length;$('redoBtn').disabled=!future.length}
-function normalizePart(p,index){const def=partDefinition(p?.type);if(!def)throw Error('Componente no reconocido');const dims={};for(const [k,v] of Object.entries(def.dims)){const input=Number(p?.dims?.[k]);dims[k]=Number.isFinite(input)?Math.max(1,Math.min(INTEGER_DIMS.has(k)?32:15000,INTEGER_DIMS.has(k)?Math.round(input):input)):v}const pos=[0,1,2].map(i=>{const n=Number(p?.pos?.[i]);return Number.isFinite(n)?Math.max(-100000,Math.min(100000,n)):0});const rot=[0,1,2].map(i=>{const n=Number(p?.rot?.[i]);return Number.isFinite(n)?Math.max(-3600,Math.min(3600,n)):0});const color=/^#[\da-fA-F]{6}$/.test(p?.color)?p.color:def.color;return {id:'import-'+index+'-'+Math.random().toString(36).slice(2,9),type:def.type,name:String(p?.name||def.label).slice(0,80),dims,pos,rot,color}}
-function refreshScene(){if(transform)transform.detach();for(const group of models.values()){modelRoot.remove(group);releasePart(group)}models.clear();for(const part of items){const group=makePart(part);group.position.fromArray(part.pos);group.rotation.set(...part.rot.map(THREE.MathUtils.degToRad));modelRoot.add(group);models.set(part.id,group)}updateSelection();updateList();updateCount();saveLocal();render()}
+function normalizePart(p,index){const def=partDefinition(p?.type);if(!def)throw Error('Componente no reconocido');const dims={};for(const [k,v] of Object.entries(def.dims)){const input=Number(p?.dims?.[k]);dims[k]=Number.isFinite(input)?Math.max(1,Math.min(INTEGER_DIMS.has(k)?32:15000,INTEGER_DIMS.has(k)?Math.round(input):input)):v}const pos=[0,1,2].map(i=>{const n=Number(p?.pos?.[i]);return Number.isFinite(n)?Math.max(-100000,Math.min(100000,n)):0});const rot=[0,1,2].map(i=>{const n=Number(p?.rot?.[i]);return Number.isFinite(n)?Math.max(-3600,Math.min(3600,n)):0});const color=/^#[\da-fA-F]{6}$/.test(p?.color)?p.color:def.color;return {id:(typeof p?.id==='string'&&/^[a-zA-Z0-9_-]{1,90}$/.test(p.id))?p.id:'import-'+index+'-'+Math.random().toString(36).slice(2,9),type:def.type,name:String(p?.name||def.label).slice(0,80),dims,pos,rot,color,joint:(p?.joint&&typeof p.joint.targetId==='string'&&typeof p.joint.selfPort==='string'&&typeof p.joint.targetPort==='string')?{targetId:p.joint.targetId,selfPort:p.joint.selfPort,targetPort:p.joint.targetPort}:undefined}}
+function resolveJoints(){
+ const index=new Map(items.map(p=>[p.id,p])),done=new Set(),visiting=new Set();
+ const visit=(child)=>{
+  if(done.has(child.id))return;
+  if(visiting.has(child.id)){delete child.joint;return}
+  visiting.add(child.id);
+  const j=child.joint;
+  if(j){const parent=index.get(j.targetId);
+   if(!parent||parent===child||visiting.has(parent.id))delete child.joint;
+   else {visit(parent);const next=jointFromIds(child,parent,j.selfPort,j.targetPort);
+    if(next){child.pos=next.transform.pos;child.rot=next.transform.rot}else delete child.joint}
+  }
+  visiting.delete(child.id);done.add(child.id);
+ };
+ items.forEach(visit);
+}
+function syncModels(){
+ resolveJoints();
+ for(const p of items){const group=models.get(p.id);if(!group)continue;group.position.fromArray(p.pos);group.rotation.set(...p.rot.map(THREE.MathUtils.degToRad));}
+ render();
+}
+function usedPorts(targetId,exceptId){return items.filter(p=>p.id!==exceptId&&p.joint?.targetId===targetId).map(p=>p.joint.targetPort)}
+function createJoint(child,target,portA,portB){
+ if(!child||!target||child.id===target.id)return null;
+ let ancestor=target;const visited=new Set();
+ while(ancestor){if(ancestor.id===child.id)return null;if(visited.has(ancestor.id))return null;visited.add(ancestor.id);ancestor=items.find(p=>p.id===ancestor.joint?.targetId)}
+ return portA&&portB?jointFromIds(child,target,portA,portB):bestJoint(child,target,usedPorts(target.id,child.id));
+}
+function connectParts(sourceId,targetId,portA,portB){
+ const child=items.find(p=>p.id===sourceId),target=items.find(p=>p.id===targetId);
+ if(!child||!target||child.id===target.id){notify('Selecciona dos piezas diferentes');return false}
+ const joint=createJoint(child,target,portA,portB);
+ if(!joint){notify('Sin bocas compatibles: comprueba diámetro y tipo de pieza');return false}
+ checkpoint();child.joint={targetId:joint.targetId,selfPort:joint.selfPort,targetPort:joint.targetPort};
+ child.pos=joint.transform.pos;child.rot=joint.transform.rot;joinSource=null;
+ refreshScene();selectPart(child.id);focusSelected();
+ notify('✓ '+child.name+' unida a '+target.name+' · ambas piezas están vinculadas');return true;
+}
+function refreshJoinUI(){
+ const part=items.find(p=>p.id===selected),panel=$('joinPanel');
+ if(!panel)return;
+ panel.classList.toggle('hidden',!part);
+ if(!part)return;
+ const target=$('joinTarget'),before=target.value;
+ target.replaceChildren();
+ for(const other of items){if(other.id===part.id||!portsFor(other).length)continue;
+  const opt=document.createElement('option');opt.value=other.id;opt.textContent=other.name;target.append(opt)}
+ if([...target.options].some(x=>x.value===before))target.value=before;
+ const parent=items.find(p=>p.id===target.value);
+ const own=$('joinOwnPort'),dest=$('joinTargetPort');own.replaceChildren();dest.replaceChildren();
+ for(const port of portsFor(part)){const opt=document.createElement('option');opt.value=port.id;opt.textContent=port.label;own.append(opt)}
+ if(parent)for(const port of portsFor(parent)){const opt=document.createElement('option');opt.value=port.id;opt.textContent=port.label;dest.append(opt)}
+ const suggested=parent&&createJoint(part,parent);
+ if(suggested){own.value=suggested.selfPort;dest.value=suggested.targetPort}
+ $('btnJoinNow').disabled=!parent;
+ $('btnDetach').disabled=!part.joint;
+ $('jointStatus').textContent=part.joint?'Vinculada a '+(items.find(p=>p.id===part.joint.targetId)?.name||'otra pieza'):'Sin unión · usa conexión automática o selecciona las bocas';
+}
+function refreshScene(){resolveJoints();if(transform)transform.detach();for(const group of models.values()){modelRoot.remove(group);releasePart(group)}models.clear();for(const part of items){const group=makePart(part);group.position.fromArray(part.pos);group.rotation.set(...part.rot.map(THREE.MathUtils.degToRad));modelRoot.add(group);models.set(part.id,group)}updateSelection();updateList();updateCount();refreshJoinUI();saveLocal();render()}
 function updateCount(){$('elementCount').textContent=items.length;$('pieceCounter').textContent=items.length+' piezas'}
-function updateList(){const list=$('objectList');list.replaceChildren();for(const part of items){const b=document.createElement('button');b.className=part.id===selected?'selected':'';const def=partDefinition(part.type);const title=document.createElement('strong');title.textContent=part.name;const type=document.createElement('span');type.textContent=def?.category||'';b.append(title,type);b.addEventListener('click',()=>{selectPart(part.id);closePanels()});list.append(b)}}
-function selectPart(id){selected=items.some(x=>x.id===id)?id:null;updateSelection();updateList();render()}
+function updateList(){const list=$('objectList');list.replaceChildren();for(const part of items){const b=document.createElement('button');b.className=part.id===selected?'selected':'';const def=partDefinition(part.type);const title=document.createElement('strong');title.textContent=(part.joint?'🔗 ':'')+part.name;const type=document.createElement('span');type.textContent=def?.category||'';b.append(title,type);b.addEventListener('click',()=>{if(joinSource&&joinSource!==part.id){connectParts(joinSource,part.id);closePanels()}else{selectPart(part.id);closePanels()}});list.append(b)}}
+function selectPart(id){selected=items.some(x=>x.id===id)?id:null;updateSelection();updateList();refreshJoinUI();render()}
 function updateSelection(){const data=items.find(p=>p.id===selected);$('emptyState').classList.toggle('hidden',!!data);$('inspectorContent').classList.toggle('hidden',!data);if(transform)transform.detach();for(const [id,group] of models){group.traverse(x=>{if(x.isMesh&&x.material?.emissive)x.material.emissive.setHex(id===selected?0x09283c:0x000000)})}if(!data){$('pipePresets').classList.add('hidden');return;}
  $('selectedType').textContent=partDefinition(data.type).label.toUpperCase();$('pieceName').value=data.name;$('pieceColor').value=data.color;const fields=$('dimensionFields');fields.replaceChildren();for(const [key,value] of Object.entries(data.dims)){const label=document.createElement('label');label.className='field';const name=document.createElement('span');name.textContent=DIMENSION_NAMES[key]||key;const input=document.createElement('input');input.type='number';input.min='1';input.max=INTEGER_DIMS.has(key)?'32':'15000';input.step=INTEGER_DIMS.has(key)?'1':'0.1';input.value=value;input.addEventListener('change',()=>{const n=Number(input.value);if(!Number.isFinite(n)||n<=0||n>15000){input.value=data.dims[key];notify('Introduce una medida válida');return}checkpoint();data.dims[key]=INTEGER_DIMS.has(key)?Math.round(Math.min(n,32)):n;if(data.dims.wall&&data.dims.diameter&&data.dims.wall>=data.dims.diameter/2){data.dims.wall=Math.max(1,Math.round(data.dims.diameter*.2*100)/100);notify('Se corrigió el espesor para mantener el interior hueco')}refreshScene()});label.append(name,input);fields.append(label)}for(const [prefix,arr] of [['pos',data.pos],['rot',data.rot]])['X','Y','Z'].forEach((axis,i)=>$(prefix+axis).value=Math.round(arr[i]*100)/100);if(transform&&models.has(selected)&&interactionMode==='rotate'){transform.attach(models.get(selected));transform.visible=true}document.querySelectorAll('#materialSwatches button').forEach(b=>b.classList.toggle('selected',b.dataset.color===data.color));$('pipePresets').classList.toggle('hidden',!(data.dims.diameter&&data.dims.wall));}
 function valueChanged(){const data=items.find(x=>x.id===selected);if(!data)return;const pos=['X','Y','Z'].map(a=>Number($('pos'+a).value));const rot=['X','Y','Z'].map(a=>Number($('rot'+a).value));if([...pos,...rot].some(n=>!Number.isFinite(n)||Math.abs(n)>100000)){notify('Coordenadas no válidas');return}checkpoint();data.name=$('pieceName').value.slice(0,80)||data.name;data.color=$('pieceColor').value;data.pos=pos;data.rot=rot;refreshScene()}
