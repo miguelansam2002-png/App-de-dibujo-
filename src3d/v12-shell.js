@@ -2,6 +2,7 @@ import {bindCatalogPreviews,pauseCatalogPreviews} from './catalog-previews.js';
 import {listProjects} from './project-store.js';
 import {TRAIN_PRESETS} from './train-presets.js';
 import './v12-shell.css';
+import './v13-theme.css';
 
 const h=(tag,cls,txt)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=String(txt);return el};
 const button=(cls,text,action)=>{const b=h('button',cls,text);b.type='button';b.addEventListener('click',action);return b};
@@ -92,6 +93,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  for(const [label,action,style] of actions)quick.append(button('v12-quick-btn '+(style||''),label,action));
  const more=button('v12-quick-btn v12-more','··· Más',()=>document.body.classList.toggle('v12-advanced'));quick.append(more);
  const guide=button('v12-tip','? Guía',showGuide);quick.append(guide);
+ const tools=button('v12-tip','▧ Planos',()=>studio.openDocs());quick.append(tools);
  const homeBtn=button('v12-home-button','⌂ Inicio',()=>go('home'));document.querySelector('.top-actions')?.prepend(homeBtn);
  const libraryBtn=button('v12-home-button','◈ Modelos',()=>go('library'));document.querySelector('.top-actions')?.prepend(libraryBtn);
  const projectsBtn=button('v12-home-button','▦ Proyectos',()=>go('projects'));document.querySelector('.top-actions')?.prepend(projectsBtn);
