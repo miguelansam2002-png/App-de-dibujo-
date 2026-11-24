@@ -59,7 +59,7 @@ try{
   await tablet.screenshot({path:'qa-screenshots/tablet.png'});
   await tablet.locator('#dockLibrary').click();
   assert.ok(await tablet.locator('#libraryPanel').evaluate(el=>el.classList.contains('open')));
-  await tablet.screenshot({path:'qa-screenshots/tablet-library.png'});
+  await tablet.waitForTimeout(340);await tablet.screenshot({path:'qa-screenshots/tablet-library.png'});
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
   console.log('Pruebas UI V4: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
