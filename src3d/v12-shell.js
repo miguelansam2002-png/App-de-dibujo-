@@ -22,7 +22,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  document.querySelector('.topbar')?.prepend(nav);
  const getPart=type=>catalog.find(p=>p.type===type);
  function markRecent(type){recent=[type,...recent.filter(x=>x!==type)].slice(0,12);writeArray(RECENT_KEY,recent)}
- function pick(type){if(!getPart(type))return;markRecent(type);addPart(type);go('design');notify('Componente añadido. Puedes editarlo o unirlo a otro.')}
+ function pick(type){if(!getPart(type))return;markRecent(type);go('design');requestAnimationFrame(()=>requestAnimationFrame(()=>{addPart(type);fitScene?.();renderScene?.();notify('Pieza añadida y visible en el diseño.')}))}
  function go(next){if(next==='design')pauseCatalogPreviews();else if(typeof palette!=='undefined')palette.hidden=true;page=next;setEditorActive?.(next==='design');document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
    nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.page===next);b.setAttribute('aria-current',b.dataset.page===next?'page':'false')});
    if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};requestAnimationFrame(()=>requestAnimationFrame(()=>{fitScene?.();renderScene?.()}));return}
