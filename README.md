@@ -1,29 +1,29 @@
-# Trazo Técnico 3D Studio — V6
+# Trazo Técnico 3D Studio V7 · CAD B-Rep
 
-Editor tridimensional para proyectos **conceptuales** de ingeniería industrial en Android y escritorio.
+Aplicación Android y escritorio para diseño conceptual de ingeniería. **V7 integra OpenCascade mediante RepliCAD en un Web Worker**, para realizar cálculos CAD sin bloquear los gestos del visor.
 
-## Funciones incorporadas en V6 (2026-11-24)
-- **Gestor de proyectos offline** en IndexedDB: guardar, abrir, duplicar y eliminar; conserva el respaldo JSON y los proyectos V2-V5.
-- **3 plantillas de trenes de compresión:** turbina-caja-compresor, motor-compresor y tren en tándem; módulos independientes y metadatos editables.
-- **21 nuevos tipos de objetos**: turbinas, compresores con boquillas, rotores con etapas, impulsores con álabes, cojinetes, sellos, cuadros de gas de sellos, filtros, enfriadores, bancadas, pedestales y tres sólidos CAD. **120 elementos insertables** en biblioteca + 1 tipo reservado para mallas importadas.
-- **Árbol de ensamblaje:** seleccionar, ocultar, mostrar, desplazar conjuntos, y vista explosionada reversible.
-- **Medición preliminar** de separación entre cajas envolventes e identificación de pares con envolventes superpuestas.
-- **Importación STL y GLB** con unidades de entrada seleccionables (mm, cm, m, in); persistencia de geometría en JSON/IndexedDB.
-- **Operaciones CSG de malla experimentales** (unión, corte e intersección) sobre bloque/cilindro/esfera y otras mallas cerradas, mediante three-bvh-csg. **NO se trata de B-Rep ni de un sistema industrial CAD exacto**.
-- **Documentación:** exportación de plano visual A3 en SVG con planta, alzado, lateral e isométrica; lista de materiales CSV e informe HTML imprimible.
-- Se mantienen las herramientas anteriores: unión por conectores, cotas numéricas, NPS/DN, ajustes finos, guardado JSON, PNG, STL y GLB.
-- Nuevos controles de Studio adaptados a tableta, con interfaz de proyectos y módulo de equipos.
+## Funciones nuevas
+
+- **Ingeniería → CAD exacto:** croquis paramétricos elementales: bloque rectangular, cilindro, placa con taladro y tubería hueca. La geometría se crea como sólido B-Rep real, no como una malla triangular.
+- **Importación STEP/STP:** los sólidos importados se conservan en el proyecto con su geometría B-Rep (fuente STEP). La previsualización utiliza una malla derivada.
+- **Exportación STEP:** una pieza B-Rep seleccionada. No intenta convertir mallas STL/GLB antiguas en STEP.
+- **Booleanas B-Rep:** unión, corte e intersección de dos sólidos STEP. En V7 exigen rotación 0° para mantener el flujo de transformaciones fiable.
+- **Regeneración paramétrica:** edición de dimensiones de piezas B-Rep creadas desde perfiles simples; actualiza la definición STEP.
+- Mantiene las herramientas V6: biblioteca de 120 componentes, proyectos IndexedDB offline, tres trenes de compresión conceptuales, planos visuales A3, BOM, inspección y controles de tableta.
 
 ## Uso rápido
-1. Abre **Proyectos** para guardar una copia local o elegir un diseño anterior.
-2. En el visor pulsa **Trenes** y selecciona una de las tres plantillas.
-3. En **Ingeniería → Conjuntos** puedes ver cada equipo, ocultar carcasa y usar la vista explosionada.
-4. En **Ingeniería → CAD experimental** importa STL/GLB o combina dos sólidos de la categoría Sólidos CAD.
-5. En **Ingeniería → Medición** puedes consultar distancias orientativas.
-6. En **Planos** exporta el dibujo A3, la lista de materiales o el informe técnico.
-7. Exporta periódicamente un **JSON de respaldo** antes de cambiar o desinstalar una APK de prueba.
 
-## Desarrollo y compilación
+1. Abre **Ingeniería → CAD exacto**.
+2. Elige bloque, cilindro, placa perforada o tubo. Introduce las medidas en milímetros y pulsa **Crear sólido B-Rep**.
+3. Selecciona el objeto y pulsa **Exportar pieza B-Rep seleccionada (.step)**.
+4. Usa **Importar modelo STEP / STP** para insertar un modelo CAD con licencia y documentación válidas.
+5. Para unión, resta o intersección, crea/importa dos sólidos B-Rep; selecciónalos en los campos A y B.
+6. Guarda tus trabajos en **Proyectos** y exporta una copia JSON antes de cambiar de APK.
+
+La primera operación inicializa el motor WebAssembly y puede consumir tiempo y memoria. Se distribuye localmente dentro de la aplicación y no requiere servidor de geometría.
+
+## Compilación
+
 ```bash
 npm install
 npm run check
@@ -32,28 +32,24 @@ npm run build
 npm run dev
 ```
 
-La acción de GitHub Actions crea el archivo Android **debug APK**. Para instalar localmente desde una estación con SDK Android y Java:
-```bash
-npx cap add android
-npx cap sync android
-cd android
-./gradlew assembleDebug
-```
+GitHub Actions compila la APK Android de pruebas con Capacitor. Node.js 22+ recomendado.
 
-## Limitaciones reconocidas
-- Los **trenes de compresión son representaciones mecánicas conceptuales originales**, sin planos licenciados de Siemens u otros fabricantes. No corresponden a un modelo 462B 4/3 dimensionalmente validado.
-- La geometría CSG se representa mediante triángulos: no es un kernel paramétrico B-Rep de OpenCascade, y algunas booleanas pueden fallar por errores topológicos. **La importación/exportación STEP e IGES todavía no está implementada**.
-- Las vistas SVG son proyecciones de mallas, **no dibujos certificados**; las medidas provienen de las envolventes y los parámetros de piezas, no sustituyen tolerancias de fabricación.
-- La detección preliminar de colisiones trabaja con cajas envolventes y puede producir falsos positivos.
-- IndexedDB conserva proyectos offline pero desinstalar Android puede eliminar ese almacenamiento. Exporta siempre los JSON.
-- Las bibliotecas son originales y paramétricas; dimensiones, materiales, normas y números de parte deben verificarse con documentación autorizada.
-- CSG: three-bvh-csg MIT y three-mesh-bvh MIT. Licencias completas disponibles en los repositorios respectivos y paquetes npm.
+## Límites conocidos
 
-## Continuación del plan V7-V11
-1. **V7:** evaluar e integrar OpenCascade.js/RepliCAD en un worker B-Rep, compatibilidad STEP, croquis y cotas exactas.
-2. **V8:** restricciones mecánicas de ensamblaje, uniones concéntricas/cara/cota y comprobación real de interferencias.
-3. **V9:** modelos de fabricante autorizados y trenes de compresión parametrizados con piezas internas verificadas.
-4. **V10:** planos con cotas, cortes y tolerancias reales, informes de mantenimiento y documentación formal.
-5. **V11:** firmado estable Android, migración y recuperación de datos, biblioteca descargable y pruebas físicas de rendimiento.
+- **B-Rep/STEP disponible únicamente para piezas creadas/importadas desde este nuevo módulo.** Los antiguos modelos conceptuales no se convierten automáticamente a sólidos CAD exactos.
+- STEP de **pieza individual**, no de ensamblaje multinivel. No se admite aún IGES.
+- Booleanas B-Rep de piezas con rotación 0°. Los casos complejos pueden generar errores topológicos. Las traslaciones sí están consideradas.
+- Croquis simples parametrizados, no un editor completo de restricciones geométricas. Quedan pendientes chaflanes, redondeos e historiales por operaciones.
+- Las dimensiones son nominales; la generación de B-Rep **no equivale a certificación de fabricante ni a un plano validado para fabricación**.
+- Conserva exportaciones de planos visuales orientativos; las cotas certificadas y tolerancias formales siguen en desarrollo.
+- La desinstalación de Android podría borrar los proyectos de IndexedDB. Exporta siempre tus JSON.
+- El proyecto incorpora OpenCascade en WASM; hay obligaciones de licencia LGPL que deben revisarse para distribuciones de producción. Consulta [avisos](licenses/THIRD-PARTY.md).
 
-La versión 2D original permanece en `standalone/TrazoTecnico_v1.html`.
+## Próximas etapas
+
+- V8: restricciones geométricas y mecánicas, referencias concéntricas, interferencias topológicas.
+- V9: trenes de compresión basados en modelos dimensionalmente verificados y autorizados.
+- V10: planos de fabricación con vistas, secciones y cotas/tolerancias precisas.
+- V11: firma Android estable, copias de seguridad y prueba en tabletas físicas.
+
+La app 2D autónoma original permanece en `standalone/TrazoTecnico_v1.html`.

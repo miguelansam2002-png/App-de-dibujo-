@@ -21,7 +21,7 @@ try{
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
   assert.equal(await page.locator('.part-card').count(),120,'El catálogo debe mostrar 120 componentes disponibles');
-  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V6 listo'),true);
+  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V7 listo'),true);
   await page.waitForTimeout(600);
   assert.ok(await page.locator('.part-card[data-part-type]').count()===120,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
@@ -70,6 +70,9 @@ try{
   await page.screenshot({path:'qa-screenshots/train-assembly.png'});
   await page.getByRole('button',{name:'Ingeniería'}).click();
   assert.ok(await page.getByText('Conjuntos', {exact:true}).first().isVisible());
+  await page.getByRole('button',{name:'CAD exacto',exact:true}).click();
+  assert.ok(await page.getByText('Motor B-Rep · OpenCascade').isVisible());
+  assert.ok(await page.getByRole('button',{name:'Crear sólido B-Rep'}).isVisible());
   await page.getByRole('button',{name:'Planos'}).click();
   assert.ok(await page.getByText('Exportar plano A3 (SVG)').isVisible());
   await page.getByRole('button',{name:'Proyectos',exact:true}).click();
@@ -77,5 +80,5 @@ try{
   await page.locator('.studio-close').click();
   assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
-  console.log('Pruebas UI V6: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
+  console.log('Pruebas UI V7: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
