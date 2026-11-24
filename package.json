@@ -1,14 +1,14 @@
 {
   "name": "trazo-tecnico-3d",
   "private": true,
-  "version": "4.0.0",
+  "version": "5.0.0",
   "type": "module",
   "description": "Trazo Tecnico 3D: biblioteca industrial parametrica e interaccion tactil",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js",
+    "check": "node --check src3d/parts.js && node --check src3d/main.js && node --check src3d/connections.js && node --check src3d/premium-models.js && node --check src3d/catalog-previews.js",
     "android:add": "npm run build && npx cap add android",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
