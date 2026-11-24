@@ -1,0 +1,37 @@
+/* V10: estudio documental en azul tecnico; accesibilidad tactil para tableta. */
+.v10-docs{--v10-ink:#173e55;--v10-accent:#087b92;--v10-border:#d0e1ea;color:var(--v10-ink);}
+.v10-hero{padding:21px 22px;background:linear-gradient(125deg,#0e334b,#15607a);border-radius:14px;color:white;box-shadow:0 8px 20px #0a34451c}
+.v10-hero h3{font-size:22px;color:white;margin:8px 0}.v10-hero p{font-size:12px;line-height:1.6;max-width:600px;color:#d1e5ed;margin:0}
+.v10-kicker{font-size:10px;font-weight:850;letter-spacing:1.4px;color:#80d5dd}
+.v10-tabs{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:4px}
+.v10-btn{appearance:none;min-height:42px;border:1px solid #b7d0dc;color:#23546d;background:#f6fafc;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:760;cursor:pointer;transition:background .16s,border-color .16s;touch-action:manipulation}
+.v10-btn:hover,.v10-btn:focus-visible{border-color:#1f8a9f;background:#e6f2f7}
+.v10-btn.primary,.v10-btn.tab.active{background:#087c94;border-color:#087c94;color:white}
+.v10-btn.danger{color:#a33541;background:#fff0f1;border-color:#ebc1c6}
+.v10-btn:disabled{opacity:.54;cursor:progress}
+.v10-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.v10-metrics>div{border:1px solid #d4e5ed;border-radius:10px;padding:12px;background:#f5f9fb;display:flex;flex-direction:column;gap:5px}
+.v10-metrics b{font-size:18px;color:#14546c}.v10-metrics small{font-size:10px;color:#67869a}
+.v10-card{background:white;border:1px solid var(--v10-border);border-radius:12px;padding:17px;display:flex;flex-direction:column;gap:11px;box-shadow:0 2px 9px #0c324207}
+.v10-card h3{color:#19465e;font-size:15px;margin:0}.v10-muted{font-size:12px;color:#6b8594;margin:0;line-height:1.5}
+.v10-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v10-field{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:11px;color:#49677d;font-weight:750}
+.v10-field.full{grid-column:1/-1}
+.v10-field input,.v10-field select,.v10-field textarea{width:100%;min-width:0;min-height:42px;border:1px solid #bfcfdb;border-radius:9px;background:white;color:#1c4154;font-family:inherit;font-size:13px;padding:9px 10px;font-weight:500}
+.v10-field textarea{min-height:85px;resize:vertical}
+.v10-field input:focus,.v10-field select:focus,.v10-field textarea:focus{border-color:#148aa0;outline:2px solid #148aa02c}
+.v10-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.v10-checks{display:flex;gap:10px 17px;flex-wrap:wrap}
+.v10-checks label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:650;color:#4b7184}
+.v10-checks input{width:17px;height:17px;accent-color:#15839a}
+.v10-preview{min-height:160px;border:1px solid #d3e2ea;background:#ecf2f6;border-radius:11px;padding:9px;display:flex;align-items:center;justify-content:center;overflow:auto}
+.v10-preview>svg{width:100%;height:auto;max-width:100%;border:1px solid #c4d3db;background:white;box-shadow:0 4px 15px #1435471c}
+.v10-warning{padding:12px 14px;background:#fff7e9;border:1px solid #eed6a7;border-radius:10px;color:#795423;font-size:12px;line-height:1.55}
+.v10-record{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:#f4f9fb;border:1px solid #dce8ee}
+.v10-record strong{font-size:12px;color:#1c5972}.v10-record p{font-size:12px;color:#4f697b;margin:0;overflow-wrap:anywhere}
+.v10-bom{max-height:520px;overflow:auto;border:1px solid #dce7ee;border-radius:10px}
+.v10-bom-row{display:grid;grid-template-columns:minmax(0,1fr) 2fr auto;align-items:center;gap:12px;padding:11px 13px;border-bottom:1px solid #e8eef3;font-size:11px}
+.v10-bom-row strong{color:#214b61}.v10-bom-row small{color:#6a8899}.v10-bom-row b{font-size:13px;color:#0d7189}
+.v10-metadata{font-size:12px;color:#46697d;margin:1px 0;overflow-wrap:anywhere}
+@media(max-width:850px){.v10-btn{min-height:47px;padding:11px 12px;font-size:12px}.v10-card{padding:14px}.v10-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.v10-hero{padding:18px}.v10-preview{min-height:95px}.v10-bom-row{grid-template-columns:minmax(0,1fr) auto}.v10-bom-row small{grid-column:1/-1;grid-row:2}}
+@media(max-width:540px){.v10-fields{grid-template-columns:1fr}.v10-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.v10-btn.tab{padding:8px}.v10-hero h3{font-size:19px}}
