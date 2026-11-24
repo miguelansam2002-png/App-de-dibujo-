@@ -1,29 +1,31 @@
-# Trazo Técnico 3D — Versión 3
+# Trazo Técnico 3D — Versión 4
 
-Editor 3D de ingeniería liviano, paramétrico y táctil, orientado a tuberías, grapas, bridas, soportes, estructuras y bocetos de mantenimiento y fabricación. Funciona en navegador y tiene compilación automatizada **APK Android de pruebas** mediante GitHub Actions.
+Aplicación de diseño tridimensional para bocetos y ensamblajes conceptuales de ingeniería, especialmente tuberías, grapas, bridas, válvulas y soportes. Optimizada para pantallas táctiles Android y escritorio.
 
-## Lo nuevo en V3
+## Novedades V4
 
-- **47 tipos de piezas originales** agrupadas en tuberías, accesorios, bridas, válvulas, grapas, soportes, estructuras, fijaciones y equipos. No usa modelos de fabricantes sin licencia.
-- **Modelos mejorados**: tuberías huecas con espesor visible, codos curvados huecos, grapas tipo U con varilla, tuercas y placa; grapas omega con banda curvada y taladros; bridas y placas con agujeros geométricos reales, perfiles estructurales, diversos tipos de válvulas y accesorios.
-- **Inserción visible**: cada pieza nueva se posiciona junto a las existentes y se encuadra automáticamente para que no quede escondida dentro de tuberías o equipos.
-- **Interacción directa con piezas**: modo Mover, selección tocando la geometría y arrastre con dedo o ratón sobre planos XZ, XY o YZ; modo Vista para girar cámara; modo Girar con aros 3D. En zonas vacías se puede orbitar la cámara.
-- **Movimiento preciso**: pasos de 1, 5, 10, 25, 50 y 100 mm, o libre; controles de desplazamiento ±X/±Y/±Z, giros rápidos ±90° y campos de posición y rotación numéricos.
-- **Diámetros de tubería NPS/DN**: opciones de 1/2 a 12 pulgadas con diámetro exterior y espesor de pared de Schedule 40/80 de referencia; datos a contrastar con especificaciones de proyecto.
-- **Mejor interfaz para tabletas**: paneles laterales, controles de mayor tamaño, barra inferior táctil, aspecto industrial sobrio, acabados y colores predefinidos.
-- JSON editable, STL, GLB y PNG; conservación automática local y exportación de proyectos.
-- Pruebas automatizadas de generación y coherencia geométrica antes de compilar la APK.
+- **Unir sin arrastrar a mano:** selecciona una pieza, pulsa **🔗 Unir**, toca la pieza destino y ambas se alinean por sus conexiones compatibles.
+- **Unión al insertar:** con la opción **Unir al insertar** activada, selecciona una tubería y toca un accesorio en la biblioteca. El nuevo componente se acopla automáticamente a una boca libre cuando existe un conector compatible.
+- **Ajuste magnético durante el movimiento:** al aproximar dos bocas compatibles se muestra una indicación turquesa. Suelta para vincularlas.
+- **Enlaces persistentes entre piezas:** la unión mantiene una relación geométrica de ensamblaje; si cambias dimensiones o posición de la pieza principal, sus piezas hijas se reajustan. También puedes **Separar** una pieza y conservar su posición.
+- **Selector avanzado de conexiones:** desde las propiedades puedes indicar pieza destino y elegir específicamente las bocas de conexión.
+- **Más detalle en varios componentes:** grapas U con placas perforadas, arandelas, tuercas y roscas; grapas omega con anclajes y pernos; bridas con caras realzadas; extremos de tuberías y accesorios reforzados visualmente.
+- Interfaz de unión destacada con acentos turquesa y botones táctiles mayores.
+- Conserva los **47 tipos de componentes** anteriores, medidas NPS/DN, unidades mm, guardar JSON, exportar PNG, STL y GLB.
 
-## Uso rápido
+## Uso rápido en tableta
 
-1. Abre **Piezas** y toca un componente para agregarlo.
-2. En modo **Mover**, toca la pieza y **arrástrala** sobre el plano de trabajo; usa el desplegable de plano si debes trabajar en alzado o lateral.
-3. Para orbitar la escena, arrastra el fondo vacío o utiliza **Vista**; con dos dedos puedes desplazar y ampliar/reducir la cámara.
-4. Selecciona una pieza y abre **Editar**. Ajusta medidas, posición, giro o acabado. Usa los botones de ±X, ±Y, ±Z para colocar la pieza con precisión.
-5. Para tuberías con diámetro y espesor editables, selecciona NPS/DN y Schedule y pulsa **Aplicar**.
-6. Pulsa **Guardar** para exportar JSON. Al trabajar en Android utiliza Compartir para guardar copias fuera de la aplicación antes de desinstalarla.
+1. Abre **Piezas**, selecciona una tubería o usa la predeterminada.
+2. Activa **Unir al insertar** y añade un codo, una brida u otra pieza con diámetro compatible. La aplicación acopla las bocas automáticamente.
+3. Para unir dos piezas que ya están en el dibujo: selecciona la **pieza que quieres mover**, pulsa **🔗 Unir**, después toca la **pieza destino** en el modelo.
+4. Para indicar extremos exactos, abre **Editar → Ensamble inteligente**, elige pieza destino, «Mi conexión» y «Conexión destino», y pulsa **Alinear y unir automáticamente**.
+5. También puedes aproximar una pieza con el dedo: cuando aparezca el indicador de encaje, suéltala.
+6. Para mover por separado una pieza vinculada, pulsa **Separar** o arrástrala (la aplicación desvincula esa pieza al iniciar un movimiento libre).
+7. Exporta **JSON** con frecuencia: guarda una copia fuera de la app antes de actualizar o desinstalar una APK de prueba.
 
-### Navegador / desarrollo
+Los enlaces de montaje son editables y **no son operaciones booleanas de fusión de sólidos**. Se conservan en los archivos JSON de la versión 4.
+
+## Desarrollo
 
 ```bash
 npm install
@@ -32,16 +34,9 @@ npm test
 npm run dev
 ```
 
-Para generar el sitio web offline: `npm run build`.
-
-### Android
-
-La acción [Trazo Tecnico 3D - APK de prueba](.github/workflows/android-apk.yml) crea una APK firmada únicamente para pruebas (debug) en la pestaña **Actions** del repositorio. GitHub Actions la guarda como artefacto ZIP descargable.
-
-Para crear localmente el proyecto Android con SDK y Java configurados:
+La acción [APK de prueba](.github/workflows/android-apk.yml) compila la versión de Android con Capacitor (debug). La acción [Prueba visual](.github/workflows/ui-visual.yml) revisa la interfaz de escritorio/tableta en navegador.
 
 ```bash
-npm install
 npm run build
 npx cap add android
 npx cap sync android
@@ -49,22 +44,12 @@ cd android
 ./gradlew assembleDebug
 ```
 
-La APK debug resultante estará en `android/app/build/outputs/apk/debug/app-debug.apk`. Para una distribución permanente hay que establecer un ID/keystore de firma de producción, versiones y pruebas de actualización en dispositivos reales.
+El ejecutable de depuración aparece en `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-## Referencias para las dimensiones y la biblioteca
+## Alcance técnico y próximos pasos
 
-- Datos orientativos de OD y Schedule de tuberías: tabla técnica pública de Dixon Valve, *Pipe Dimensions — B36.10/B36.19*: https://dixonvalve.com/sites/default/files/catalog/dixonvalve_com/2024_13/DPL%202024%20catalog%20fixed/DPL424%20page%201141.pdf
-- Normas de referencia de bridas: ASME B16.5; consultar documentación autorizada de cada proyecto antes de usar dimensiones en planos de fabricación.
-- Referencia de soportes y abrazaderas: MSS SP-58; requisitos y tamaños reales varían según el fabricante y la carga.
-- Catálogos de terceros para investigación **sin incorporar ni redistribuir archivos automáticamente**: https://www.3dfindit.com/, https://www.traceparts.com/, https://www.3dcontentcentral.com/.
-- Modelado y manipulación 3D: Three.js; empaquetado Android: Capacitor.
+Los modelos constituyen geometrías paramétricas conceptuales, **no modelos certificados de fabricante**. Aún no hay un núcleo B-Rep para booleanas exactas, detección real de colisiones ni un sistema de restricciones mecánicas completo. Las bridas, grapas y codos deben validarse contra documentación original del fabricante y las normas aplicables antes de fabricar. Los modelos comerciales de terceros no se redistribuyen sin licencia. STL y GLB representan mallas y no equivalen a STEP de fabricación.
 
-## Límites de ingeniería y próximos pasos
+Próximos hitos: conexiones con más familias (instrumentación, bombas, soportes personalizados), croquis 2D vinculados a cuerpos 3D, fusión CAD B-Rep, biblioteca industrial verificada, lista de materiales, control de interferencias y actualización Android firmada para producción.
 
-**No es todavía un sistema CAD B-Rep ni reemplaza un software de diseño certificado.** Las piezas son modelos conceptuales paramétricos propios, no modelos normalizados homologados por un fabricante. Algunas conexiones presentan geometrías superpuestas, no uniones booleanas exactas. STL/GLB exportan mallas visuales y deben verificarse antes de imprimir, mecanizar o fabricar. Las cotas calculadas y los códigos de componente no garantizan la integridad estructural.
-
-Siguientes funciones: unir extremos de tubos con puntos de acoplamiento, restricciones de posición, sólidos B-Rep con OpenCascade, archivos STEP/DXF, planos 2D asociados, listas de materiales, biblioteca de fabricantes con licencia, gestión robusta de proyectos Android y optimización de rendimiento sobre tabletas reales.
-
-## Conservación de versiones
-
-La versión 2D independiente sigue en `standalone/TrazoTecnico_v1.html` y la historia anterior permanece disponible desde Git. Los documentos JSON de Trazo Técnico 3D V2 se pueden importar en V3, pero guarda una copia antes de modificar el proyecto.
+La versión 2D original sigue en `standalone/TrazoTecnico_v1.html`. El editor 3D V4 importa archivos JSON de las versiones anteriores conservando las geometrías; realiza una copia de seguridad antes de modificar un proyecto.

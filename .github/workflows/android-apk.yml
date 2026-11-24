@@ -1,4 +1,4 @@
-name: Trazo Tecnico 3D - APK de prueba
+name: Trazo Tecnico 3D V4 - APK de prueba
 on:
   push:
     branches: [main]
@@ -33,7 +33,7 @@ jobs:
       - name: Publicar version web para pruebas
         uses: actions/upload-artifact@v4
         with:
-          name: TrazoTecnico3D-Web-V3
+          name: TrazoTecnico3D-Web-V4
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -47,7 +47,7 @@ jobs:
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
-          name: TrazoTecnico3D-APK-debug
+          name: TrazoTecnico3D-V4-APK-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
