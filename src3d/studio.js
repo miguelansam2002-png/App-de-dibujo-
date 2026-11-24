@@ -11,6 +11,7 @@ import {scanInterferences,clearanceFromBounds} from './interference-v8.js';
 import {renderV9Workshop} from './v9-workshop.js';
 import {renderEngineeringDocs} from './v10-workspace.js';
 import {normalizeDocumentMeta} from './v10-records.js';
+import {renderRecoveryPanel} from './v11-recovery.js';
 import './assembly-v8.css';
 import './studio.css';
 import './cad-ui.css';
@@ -67,6 +68,7 @@ export function createStudio(api){
    action(actions,'Copiar',async()=>{const src=await loadProject(entry.id);if(!src)return;src.meta={...src.meta,id:uid(),createdAt:new Date().toISOString()};src.name+=' · copia';await storeProject(src);openProjects()});
    action(actions,'Eliminar',async()=>{if(!confirm('¿Eliminar de esta tableta el proyecto «'+entry.name+'»?'))return;await deleteProject(entry.id);openProjects()},'studio-danger');c.append(actions);grid.append(c)}
   if(!entries.length)grid.append(elm('p',{class:'studio-muted'},'Sin proyectos adicionales. Guarda el actual para incorporarlo a la lista.'));saved.append(grid);
+  await renderRecoveryPanel(body,{projectId:current.id,getProject:api.getProject,checkpoint:api.checkpoint,replaceProject:api.replaceProject,restore,notify:showToast,refresh:openProjects});
  }
  function openTrains(){const panel=newPanel('Trenes de compresión','Conjuntos paramétricos de estudio. Carcasa, rotor, transmisión, instrumentación y auxiliares.',true);panel.dataset.panel='trains';const body=elm('div',{class:'studio-panel-body'});panel.append(body);
   const hero=elm('div',{class:'studio-hero'});hero.append(elm('div',{class:'studio-eyebrow'},'BIBLIOTECA DE ENSAMBLAJES INDUSTRIALES'),elm('h3',{},'Modela equipos completos en minutos'),elm('p',{},'Modelos conceptuales originales, sin equivalencia certificada con equipos de fabricante. Puedes inspeccionar y editar todas sus piezas.'));body.append(hero);
