@@ -10,6 +10,7 @@ import {CATALOG,PIPE_SIZES,MATERIALS,partDefinition,DIMENSION_NAMES,INTEGER_DIMS
 import {portsFor,bestJoint,jointFromIds,worldPort} from './connections.js';
 import {bindCatalogPreviews} from './catalog-previews.js';
 import {createStudio} from './studio.js';
+import {createV12Shell} from './v12-shell.js';
 import {normalizeConstraint,solveConstraint} from './assembly-engine.js';
 import './ui.css';
 
@@ -21,11 +22,11 @@ const root=$('viewport');
 let renderer,scene,camera,controls,transform,modelRoot,grid,axes,raycaster;
 let items=[],selected=null,activeCategory='Todos',history=[],future=[],models=new Map(),touchStart=null,toastTimeout=0;
 const MAX_ITEMS=500;
-const CATALOG_REVISION='V11';
+const CATALOG_REVISION='V12';
 function notify(message){const el=$('toast');el.textContent=message;el.classList.remove('hidden');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.add('hidden'),3200)}
 function status(message){$('status').textContent=message}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(getProject()))}catch(e){status('Usa Guardar para preservar el proyecto')}}
-function getProject(){return {format:'trazo-tecnico-3d',version:11,units:'mm',name:$('projectName').value.trim()||'Proyecto 3D',items:structuredClone(items),meta:studio?.snapshotMeta()||recoveredMeta||{}}}
+function getProject(){return {format:'trazo-tecnico-3d',version:12,units:'mm',name:$('projectName').value.trim()||'Proyecto 3D',items:structuredClone(items),meta:studio?.snapshotMeta()||recoveredMeta||{}}}
 function checkpoint(){history.push(JSON.stringify(items));if(history.length>45)history.shift();future=[];refreshUndo()}
 function refreshUndo(){$('undoBtn').disabled=!history.length;$('redoBtn').disabled=!future.length}
 function normalizePart(p,index){const def=partDefinition(p?.type);if(!def)throw Error('Componente no reconocido');const dims={};for(const [k,v] of Object.entries(def.dims)){const input=Number(p?.dims?.[k]);dims[k]=Number.isFinite(input)?Math.max(1,Math.min(INTEGER_DIMS.has(k)?32:15000,INTEGER_DIMS.has(k)?Math.round(input):input)):v}const pos=[0,1,2].map(i=>{const n=Number(p?.pos?.[i]);return Number.isFinite(n)?Math.max(-100000,Math.min(100000,n)):0});const rot=[0,1,2].map(i=>{const n=Number(p?.rot?.[i]);return Number.isFinite(n)?Math.max(-3600,Math.min(3600,n)):0});const color=/^#[\da-fA-F]{6}$/.test(p?.color)?p.color:def.color;return {id:(typeof p?.id==='string'&&/^[a-zA-Z0-9_-]{1,90}$/.test(p.id))?p.id:'import-'+index+'-'+Math.random().toString(36).slice(2,9),type:def.type,name:String(p?.name||def.label).slice(0,80),dims,pos,rot,color,assemblyId:typeof p?.assemblyId==='string'?p.assemblyId:undefined,assemblyName:typeof p?.assemblyName==='string'?p.assemblyName:undefined,metadata:p?.metadata&&typeof p.metadata==='object'?structuredClone(p.metadata):undefined,asset:p?.type==='custom_mesh'&&p?.asset?.geometry?structuredClone(p.asset):undefined,cad:p?.cad?.kind==='brep'&&typeof p.cad.stepSource==='string'?structuredClone(p.cad):undefined,hidden:!!p?.hidden,hiddenByDefault:!!p?.hiddenByDefault,constraint:normalizeConstraint(p?.constraint),joint:(p?.joint&&typeof p.joint.targetId==='string'&&typeof p.joint.selfPort==='string'&&typeof p.joint.targetPort==='string')?{targetId:p.joint.targetId,selfPort:p.joint.selfPort,targetPort:p.joint.targetPort}:undefined}}
@@ -227,5 +228,6 @@ function start(){try{init3d()}catch(err){console.error(err);root.textContent='Es
   replaceItems:(next,name)=>{items=next.map((x,i)=>normalizePart(x,i));selected=null;joinSource=null;history=[];future=[];if(name)$('projectName').value=name;refreshScene();fitScene();refreshUndo()},
   replaceProject:(data)=>{items=data.items.map(normalizePart);selected=null;joinSource=null;history=[];future=[];$('projectName').value=String(data.name||'Proyecto 3D').slice(0,90);refreshScene();fitScene();refreshUndo()}
  });studio.restore(recoveredMeta);
- status('Editor 3D V11 listo · proyectos, trenes y herramientas de ingeniería')}
+ createV12Shell({catalog:CATALOG,makePart,releasePart,standardPart,addPart,studio,notify});
+ status('Editor 3D V12 listo · biblioteca y estudio independientes')}
 start();
