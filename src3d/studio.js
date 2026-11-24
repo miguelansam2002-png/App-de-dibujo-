@@ -16,7 +16,7 @@ export function createStudio(api){
  const root=by('viewportWrap');
  const backdrop=elm('div',{class:'studio-backdrop hidden',id:'studioBackdrop'});document.body.append(backdrop);
  const rail=elm('div',{class:'studio-rail',role:'toolbar','aria-label':'Herramientas de ingeniería'});
- const railActions=[['projects','folder-kanban','Proyectos'],['trains','⚙','Trenes'],['tools','🛠','Ingeniería'],['docs','▧','Planos']];
+ const railActions=[['projects','▦','Proyectos'],['trains','⚙','Trenes'],['tools','⌘','Ingeniería'],['docs','▧','Planos']];
  const railButtons=new Map();for(const [id,icon,label] of railActions){const button=elm('button',{type:'button',class:'studio-rail-btn','aria-label':label});button.append(elm('span',{class:'studio-rail-icon'},icon),elm('span',{},label));rail.append(button);railButtons.set(id,button)}
  root.append(rail);
  const top=elm('button',{type:'button',class:'studio-project-button',title:'Abrir gestor de proyectos'},'▦  PROYECTOS');

@@ -67,6 +67,7 @@ try{
   page.on('dialog',dialog=>dialog.accept());
   await page.locator('.studio-template-card .studio-action.primary').first().click();
   assert.ok(Number(await page.locator('#elementCount').innerText())>=10,'Debe insertar un tren completo');
+  await page.screenshot({path:'qa-screenshots/train-assembly.png'});
   await page.getByRole('button',{name:'Ingeniería'}).click();
   assert.ok(await page.getByText('Conjuntos', {exact:true}).first().isVisible());
   await page.getByRole('button',{name:'Planos'}).click();
@@ -74,6 +75,7 @@ try{
   await page.getByRole('button',{name:'Proyectos'}).click();
   assert.ok(await page.getByText('Mis proyectos', {exact:true}).isVisible());
   await page.locator('.studio-close').click();
+  assert.equal(await page.locator('.studio-rail-icon').first().innerText(),'▦','Icono de proyectos accesible y compacto');
   assert.deepEqual(errors,[],'Errores JavaScript en escritorio');assert.deepEqual(mobileErrors,[],'Errores JavaScript en tableta');
   console.log('Pruebas UI V6: montaje automático, unión por toque, separación, catálogo, NPS y tableta');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
