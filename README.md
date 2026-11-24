@@ -1,61 +1,103 @@
-# Trazo Técnico 2D
+# Trazo Técnico 3D — Estudio de ingeniería
 
-Aplicación web de dibujo técnico **2D** orientada a bocetos y planos conceptuales de ingeniería mecánica, tuberías y soportes. Se puede utilizar sin instalar software adicional.
+Aplicación de **modelado tridimensional básico y paramétrico**, orientada a diseños conceptuales de tuberías, grapas, soportes, estructuras y equipos mecánicos desde una computadora o tableta Android.
 
-## Cómo utilizarla
+> **Estado:** versión 2.0 base. Los componentes se generan con geometría original y son representaciones conceptuales, no modelos oficiales de fabricantes ni planos certificados para fabricación.
 
-1. Abre **index.html** en un navegador moderno (Chrome, Edge o Firefox) o utiliza la versión autónoma en **standalone/TrazoTecnico_v1.html**.
-2. Selecciona herramientas de dibujo o componentes precargados en el panel lateral.
-3. Dibuja sobre el lienzo, selecciona las piezas y modifica sus dimensiones desde el panel de propiedades.
-4. Guarda una copia del proyecto en **JSON** para poder editarla en otra sesión.
-5. Exporta el plano en SVG o PNG. Para generar PDF utiliza la opción **Imprimir / Guardar PDF** del navegador.
+## Funciones actuales
 
-## Funciones de la versión 1
+- Lienzo 3D interactivo: un dedo o ratón para girar, dos dedos para zoom/desplazamiento.
+- Selección de piezas por toque, herramientas **Mover** y **Girar** sobre los ejes 3D.
+- **16 componentes paramétricos:** tubería hueca, codo, conexión T, brida con orificios, válvula conceptual, grapas tipo U y omega, perno, soporte, perfil I, placa perforada, caja industrial, tanque, eje, rotor de 10 discos y bomba esquemática.
+- Edición numérica de diámetros, longitudes, espesores, cantidades, posición y orientación en **milímetros**.
+- Vistas isométrica, superior, frontal y lateral; cuadrícula y ejes.
+- Duplicar, borrar, deshacer, rehacer y recuperar trabajo local.
+- Guardar/abrir proyectos editables **JSON**; exportar **PNG**, **STL** (mm), **GLB** (escala de metros).
+- Compartir archivos en Android con Filesystem/Share de Capacitor.
+- Interfaz responsiva para tabletas y móviles Android.
 
-- Editor vectorial 2D SVG con cuadrícula, zoom, desplazamiento y ajuste a la cuadrícula.
-- Líneas, tuberías, rectángulos, círculos/elipses, texto y cotas.
-- Componentes prediseñados: grapa tipo U, grapa omega, codo, conexión T, brida, válvula, soporte, bomba, tanque, perno y placa perforada.
-- Modificación de coordenadas, tamaños, orientación, color y unidades (mm, cm, m y pulgadas).
-- Deshacer y rehacer, duplicar y eliminar elementos.
-- Modelos de muestra: soporte de tubería, línea de proceso y caja de almacenamiento.
-- Autoguardado local cuando el navegador lo permite.
+## Ejecutar en computadora
 
-## Estructura
+Requiere Node.js >=22.12.
 
-```text
-index.html                          # Entrada principal de la aplicación web
-src/
-  app.js                            # Lógica de dibujo y componentes, versión 1
-  styles.css                        # Diseño visual adaptable
-standalone/
-  TrazoTecnico_v1.html              # Copia íntegra y autónoma de la versión 1
-.github/workflows/
-  validar.yml                       # Revisión sintáctica automática del código JS
-package.json                        # Comando de validación
+```bash
+npm install
+npm run dev
 ```
 
-La separación de HTML, JavaScript y CSS es el primer paso hacia una arquitectura modular. **El motor del editor todavía está concentrado en `src/app.js`** y conviene dividirlo en módulos en próximas versiones, con pruebas funcionales de navegador antes de avanzar.
-
-## Validación local
-
-Con Node.js instalado:
+Abrir en el navegador la dirección local mostrada por Vite. Para crear una versión web offline:
 
 ```bash
 npm run check
+npm run build
+npm run preview
 ```
 
-No se requieren paquetes npm ni servicios remotos para la versión 1.
+Los scripts se empaquetan en `dist/`: la app instalada no requiere una CDN.
 
-## Próximos desarrollos
+## Crear APK Android desde GitHub Actions
 
-1. Precisión geométrica: referencias a extremos, centros e intersecciones; ángulos y acotación más completa.
-2. Biblioteca parametrizable de tuberías, bridas, soportes y grapas.
-3. Capas, selección múltiple, agrupación y herramientas de alineación.
-4. Formatos de impresión A4/A3 y exportación DXF.
-5. Compilación como aplicación de escritorio para Windows, tras la estabilización de los módulos.
+1. En GitHub abrir la pestaña **Actions**.
+2. Abrir **Trazo Tecnico 3D - APK de prueba** y pulsar **Run workflow**. También se ejecuta tras un cambio en la rama `main`.
+3. Cuando la ejecución finalice correctamente, descargar **TrazoTecnico3D-APK-debug** desde **Artifacts**.
+4. Extraer el ZIP y transferir `app-debug.apk` a la tableta.
 
-## Alcance y precauciones
+**Advertencia:** este archivo es una **APK debug**, no está firmado para distribución pública. La firma debug generada en distintas ejecuciones puede cambiar; si Android rechaza una actualización, exporta antes tus proyectos JSON, desinstala la APK debug antigua y luego instala la nueva.
 
-Esta aplicación es una herramienta de **bocetos y diseño conceptual**. Sus dimensiones y símbolos no sustituyen cálculos mecánicos, revisión normativa ni planos certificados para fabricación o montaje. **Las exportaciones no se deben asumir como equivalentes a archivos CAD de fabricación sin validación adicional.**
+### Compilar localmente con Android Studio
 
-La aplicación no usa un servidor para guardar dibujos. El autoguardado se conserva únicamente en el navegador y dispositivo donde se hizo; guarda copias JSON para evitar perder tus proyectos.
+Requiere Android Studio, Android SDK y Node.js 22+.
+
+```bash
+npm install
+npm run android:add
+npm run android:sync
+npm run android:open
+```
+
+Android Studio permite compilar o instalar la APK en un dispositivo conectado.
+
+## Estructura del proyecto
+
+```text
+index.html                 Entrada principal del editor 3D
+src3d/main.js             Editor, cámara, interacciones, archivos, Android
+src3d/parts.js            Componentes paramétricos originales
+src3d/ui.css              Interfaz adaptada a escritorio y tableta
+src/app.js                Motor del editor 2D anterior, conservado
+src/styles.css            Estilos 2D anteriores, conservados
+standalone/               HTML autónomo 2D original
+capacitor.config.json     Configuración de la APK
+.github/workflows/        Validación y compilación Android
+```
+
+## Límites técnicos de la versión base
+
+- No incluye operaciones booleanas B-Rep, restricciones de ensamblaje, tolerancias, ni importación STEP/DXF.
+- Los codos, válvulas y conexiones son modelos visuales: no deben tomarse como diseños de presión, soldadura o montaje comprobados.
+- Cotas numéricas editables; las cotas anotadas en láminas y el cajetín se desarrollarán posteriormente.
+- No se distribuyen modelos de terceros: antes de integrar catálogos de fabricantes deben revisarse licencias y condiciones.
+- Datos guardados solo en el dispositivo; **exportar JSON periódicamente**.
+- Máximo 300 componentes por proyecto como límite preventivo para Android.
+
+## Siguientes mejoras
+
+1. Conexiones automáticas de tubería, snapping a ejes y referencias geométricas.
+2. Catálogo industrial verificable de diámetros nominales, espesores y clases de accesorios.
+3. Croquis 2D asociados a sólidos, secciones y planos acotados; PDF y DXF.
+4. Núcleo B-Rep (OpenCascade.js) para booleanas e importación/exportación STEP.
+5. Importación de STL/GLB, grupos, capas, mediciones e interferencias.
+6. Pruebas de APK en hardware real, firma estable y distribución.
+
+## Tecnologías y documentación
+
+- Three.js: https://threejs.org/manual/#en/installation
+- Capacitor Android: https://capacitorjs.com/docs/android
+- Filesystem: https://capacitorjs.com/docs/apis/filesystem
+- Share: https://capacitorjs.com/docs/apis/share
+- OpenCascade.js: https://ocjs.org/
+- Modelos de referencia (no redistribuidos): https://www.traceparts.com/ y https://www.3dfindit.com/
+
+## Nota de ingeniería
+
+La aplicación se destina a **conceptos, bocetos y visualización**. Para fabricar, instalar u operar componentes deben comprobarse materiales, tolerancias, cargas, normas ASME/API/ISO pertinentes y cálculos de ingeniería por personal competente.

@@ -1,0 +1,45 @@
+name: Trazo Tecnico 3D - APK de prueba
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+      - name: Validar codigo y compilar web offline
+        run: |
+          npm run check
+          npm run build
+      - name: Crear proyecto Android de Capacitor
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Compilar APK de depuracion
+        working-directory: android
+        run: bash ./gradlew --no-daemon assembleDebug
+      - name: Publicar APK descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrazoTecnico3D-APK-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30

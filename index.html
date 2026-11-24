@@ -1,58 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#102a42" />
-<title>Trazo Técnico | Estudio de ingeniería</title>
-<link rel="stylesheet" href="./src/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1725">
+  <meta name="description" content="Trazo Tecnico 3D, editor de modelos parametricos de ingenieria para Android y escritorio.">
+  <title>Trazo Técnico 3D | Estudio de ingeniería</title>
 </head>
 <body>
-<div class="app">
+<div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandmark" id="brandIcon"></div><div><h1>TRAZO TÉCNICO</h1><small>ESTUDIO DE INGENIERÍA · EDICIÓN 2D</small></div></div>
-    <input id="docName" class="docname" value="Plano de soporte de tubería" aria-label="Nombre del plano" maxlength="90" />
-    <div class="top-actions">
-      <button class="topbtn mobile-only" data-action="toggle-left" title="Herramientas"><span class="icon-slot" data-icon="menu"></span></button>
-      <button class="topbtn hide-sm" data-action="new"><span class="icon-slot" data-icon="file-plus"></span><span>Nuevo</span></button>
-      <button class="topbtn hide-sm" data-action="open"><span class="icon-slot" data-icon="folder-open"></span><span>Abrir</span></button>
-      <button class="topbtn" data-action="save" title="Guardar proyecto editable"><span class="icon-slot" data-icon="save"></span><span>Guardar</span></button>
-      <button class="topbtn primary" data-action="export" title="Exportar imagen SVG"><span class="icon-slot" data-icon="download"></span><span>Exportar</span></button>
-      <button class="topbtn mobile-only" data-action="toggle-right" title="Propiedades"><span class="icon-slot" data-icon="sliders"></span></button>
-    </div>
+    <button class="iconbtn mobile" id="libraryToggle" aria-label="Abrir biblioteca">☰</button>
+    <div class="brand"><span class="brand-symbol">⌁</span><div><strong>TRAZO <b>TÉCNICO</b></strong><small>ESTUDIO 3D · INGENIERÍA</small></div></div>
+    <div class="project"><span class="project-dot"></span><input id="projectName" aria-label="Nombre del proyecto" value="Nuevo diseño 3D" maxlength="90"></div>
+    <nav class="top-actions" aria-label="Archivo">
+      <button id="btnNew" title="Nuevo proyecto">Nuevo</button>
+      <button id="btnOpen" title="Abrir proyecto JSON">Abrir</button>
+      <button id="btnSave" class="primary" title="Descargar proyecto editable JSON">Guardar</button>
+      <button id="exportToggle" title="Formatos de exportación">Exportar ▾</button>
+      <div id="exportMenu" class="export-menu hidden"><button data-export="png">Imagen PNG</button><button data-export="stl">Modelo STL</button><button data-export="glb">Modelo GLB</button><button data-export="json">Proyecto JSON</button></div>
+    </nav>
   </header>
-  <div class="work" id="work">
-    <aside class="left" id="left">
-      <div class="sidebar-heading"><strong>Herramientas</strong><button class="iconbtn mobile-only" data-action="toggle-left" title="Cerrar menú"><span class="icon-slot" data-icon="x"></span></button></div>
-      <div class="tools" id="tools"></div>
-      <div class="eyebrow">Biblioteca de componentes</div>
-      <div id="library"></div>
-      <div class="eyebrow">Modelos de ejemplo</div>
-      <div id="templates"></div>
-      <div class="hint-box"><b>Diseñado para bocetos técnicos.</b> Coloca piezas, dibuja tuberías, agrega cotas y modifica sus medidas. Usa un equipo CAD especializado para cálculos normativos o fabricación.</div>
+  <main class="workspace">
+    <aside class="library panel" id="libraryPanel">
+      <div class="panel-title"><div><span class="eyebrow">HERRAMIENTAS DE MODELADO</span><h2>Biblioteca 3D</h2></div><button id="libraryClose" class="iconbtn mobile" aria-label="Cerrar biblioteca">✕</button></div>
+      <input id="librarySearch" class="search" type="search" placeholder="Buscar tubería, soporte, grapa…" aria-label="Buscar componente">
+      <div class="category-tabs" id="categoryTabs"></div>
+      <div id="partCatalog" class="part-catalog" aria-label="Componentes 3D"></div>
+      <div class="library-footer"><p>Selecciona un componente para incorporarlo al plano. Después modifica sus medidas.</p><button id="btnExample">Cargar ejemplo de tuberías</button></div>
     </aside>
-    <section class="center" aria-label="Área de dibujo">
-      <div class="canvas-toolbar">
-        <div class="toolbar-group">
-          <button class="iconbtn" data-action="undo" title="Deshacer (Ctrl+Z)" id="undoBtn"><span class="icon-slot" data-icon="undo"></span></button>
-          <button class="iconbtn" data-action="redo" title="Rehacer (Ctrl+Y)" id="redoBtn"><span class="icon-slot" data-icon="redo"></span></button>
-          <div class="separator first"></div>
-          <button class="iconbtn active" data-action="grid" title="Mostrar u ocultar cuadrícula" id="gridBtn"><span class="icon-slot" data-icon="grid"></span></button>
-          <button class="iconbtn active" data-action="snap" title="Ajustar a cuadrícula" id="snapBtn"><span class="icon-slot" data-icon="magnet"></span></button>
-          <span class="chip" id="unitChip">Unidad: mm</span>
-        </div>
-        <div class="toolbar-group"><span class="chip" id="toolLabel">Seleccionar</span><button class="iconbtn" data-action="fit" title="Ajustar vista"><span class="icon-slot" data-icon="maximize"></span></button><button class="iconbtn" data-action="help" title="Ayuda"><span class="icon-slot" data-icon="circle-help"></span></button></div>
-      </div>
-      <div class="canvas-outer" id="canvasOuter" data-tool="select"><svg id="drawing" xmlns="http://www.w3.org/2000/svg" aria-label="Lienzo interactivo"></svg><div class="canvas-tip" id="canvasTip">Haz clic en un elemento para editar sus medidas.</div><div class="floating-zoom"><button data-action="zoom-out" title="Alejar"><span class="icon-slot" data-icon="minus"></span></button><span class="zoomval" id="zoomLabel">100%</span><button data-action="zoom-in" title="Acercar"><span class="icon-slot" data-icon="plus"></span></button></div><div class="bottom-mobile" id="mobileTools"></div></div>
-      <div class="statusbar"><span id="coords">X: 0 mm · Y: 0 mm</span><span id="count">0 elementos</span><span><b id="statusSnap">● Ajuste activo</b></span></div>
+    <section class="viewport-wrap" id="viewportWrap" aria-label="Editor tridimensional">
+      <div class="viewport-hud"><div class="mode-pill"><span class="live-dot"></span> VISTA 3D INTERACTIVA</div><div class="hud-actions"><button id="moveBtn" title="Mover pieza con ejes 3D">Mover</button><button id="rotateBtn" title="Girar pieza con ejes 3D">Girar</button><button id="undoBtn" title="Deshacer">↶</button><button id="redoBtn" title="Rehacer">↷</button><button id="btnFit" title="Encuadrar escena">⛶</button><button id="inspectorToggle" class="mobile" title="Propiedades">⚙</button></div></div>
+      <div id="viewport" class="viewport"></div>
+      <div class="view-controls" aria-label="Vistas de cámara"><button data-view="iso" class="active">ISO</button><button data-view="top">SUPERIOR</button><button data-view="front">FRONTAL</button><button data-view="right">LATERAL</button></div>
+      <div class="viewport-hint">Un dedo: girar · Dos dedos: mover/zoom · Toca una pieza para editar</div>
     </section>
-    <aside class="right" id="right"><div class="right-header"><h3>Panel de propiedades</h3><button class="iconbtn mobile-only" data-action="toggle-right" title="Cerrar panel"><span class="icon-slot" data-icon="x"></span></button><span class="badge" id="selectionBadge">Plano</span></div><div id="inspector"></div></aside>
-  </div>
+    <aside class="inspector panel" id="inspectorPanel">
+      <div class="panel-title"><div><span class="eyebrow">EDICIÓN PARAMÉTRICA</span><h2>Propiedades</h2></div><button class="iconbtn mobile" id="inspectorClose" aria-label="Cerrar propiedades">✕</button></div>
+      <div id="emptyState" class="empty-state"><div class="empty-icon">◇</div><strong>Sin pieza seleccionada</strong><p>Toca un componente del diseño o selecciónalo en la lista para editarlo.</p></div>
+      <div id="inspectorContent" class="hidden"><div class="selected-type" id="selectedType"></div><label class="field"><span>Nombre de pieza</span><input id="pieceName" maxlength="80"></label><div class="section-heading">MEDIDAS <span id="unitHint">mm</span></div><div id="dimensionFields" class="dimensions"></div><div class="section-heading">POSICIÓN · mm</div><div class="dimensions"><label class="field"><span>X</span><input id="posX" type="number" step="1"></label><label class="field"><span>Y</span><input id="posY" type="number" step="1"></label><label class="field"><span>Z</span><input id="posZ" type="number" step="1"></label></div><div class="section-heading">ROTACIÓN · °</div><div class="dimensions"><label class="field"><span>X</span><input id="rotX" type="number" step="5"></label><label class="field"><span>Y</span><input id="rotY" type="number" step="5"></label><label class="field"><span>Z</span><input id="rotZ" type="number" step="5"></label></div><div class="section-heading">APARIENCIA</div><label class="field color-field"><span>Color de pieza</span><input id="pieceColor" type="color"></label><div class="piece-actions"><button id="btnDuplicate">Duplicar</button><button id="btnDelete" class="danger">Eliminar</button></div></div>
+      <div class="scene-tree"><div class="section-heading">ELEMENTOS <span id="elementCount">0</span></div><div id="objectList" class="object-list"></div></div>
+      <div class="inspector-footer"><label class="toggle-row"><input id="gridToggle" type="checkbox" checked> Cuadrícula visible</label><label class="toggle-row"><input id="axesToggle" type="checkbox"> Ejes XYZ</label><label class="toggle-row"><input id="snapToggle" type="checkbox" checked> Posición en pasos de 10 mm</label></div>
+    </aside>
+  </main>
+  <footer class="statusbar"><span><span class="status-led"></span> <span id="status">Editor listo</span></span><span id="pieceCounter">0 piezas</span><span>UNIDADES: mm</span><span class="status-right">Trazo Técnico 3D · versión 2.0 base</span></footer>
 </div>
-<input id="openFile" type="file" accept=".json,application/json" hidden />
-<div class="modal-backdrop" id="helpModal"><div class="modal"><h2>Guía rápida de Trazo Técnico</h2><p>Una herramienta sencilla para construir bocetos y planos 2D de tuberías, soportes y piezas mecánicas.</p><ol><li>Elige <b>Tubería</b>, <b>Línea</b>, <b>Rectángulo</b> o <b>Cota</b>, y arrastra sobre el lienzo.</li><li>Selecciona una <b>pieza precargada</b> (grapa, codo, brida, válvula, soporte...) y toca el punto en que quieres insertarla.</li><li>Con <b>Seleccionar</b>, toca cualquier elemento para moverlo o editar sus coordenadas y tamaños en Propiedades.</li><li>Activa o desactiva <b>Ajuste a cuadrícula</b> y usa las unidades <b>mm / cm / m / pulgadas</b>.</li><li>Usa <b>Guardar</b> para obtener un archivo editable .json, o <b>Exportar</b> para SVG, PNG e impresión/PDF.</li></ol><p><b>Atajos:</b> Supr para eliminar; Ctrl+Z / Ctrl+Y para deshacer o rehacer; Escape para seleccionar; flechas para mover piezas; rueda del mouse para hacer zoom.</p><p><b>Importante:</b> se conservan automáticamente los cambios en este navegador, siempre que el almacenamiento local esté disponible. También conviene guardar copias .json.</p><div class="modal-actions"><button class="topbtn primary" data-action="close-help">Entendido</button></div></div></div>
-<div class="modal-backdrop" id="exportModal"><div class="modal"><h2>Exportar plano</h2><p>Selecciona cómo quieres compartir el dibujo. El SVG conserva las líneas vectoriales y el PNG genera una imagen nítida.</p><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="template" data-action="export-svg"><strong>Plano vectorial SVG</strong><small>Ideal para edición y máxima calidad</small></button><button class="template" data-action="export-png"><strong>Imagen PNG</strong><small>Ideal para WhatsApp e informes</small></button><button class="template" data-action="print"><strong>Imprimir / Guardar PDF</strong><small>Mediante el diálogo del navegador</small></button><button class="template" data-action="save"><strong>Proyecto editable JSON</strong><small>Para seguir modificándolo después</small></button></div><div class="modal-actions"><button class="smallbtn" style="flex:0 0 110px" data-action="close-export">Cerrar</button></div></div></div>
-<div class="toast" id="toast"></div>
-<script src="./src/app.js" defer></script>
+<input id="fileOpen" type="file" accept="application/json,.json" hidden>
+<div id="toast" class="toast hidden" role="status"></div>
+<script type="module" src="/src3d/main.js"></script>
 </body>
 </html>

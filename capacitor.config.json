@@ -1,0 +1,6 @@
+{
+  "appId": "com.trazotecnico3d.app",
+  "appName": "Trazo Técnico 3D",
+  "webDir": "dist",
+  "android": {"allowMixedContent": false}
+}
