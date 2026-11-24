@@ -21,7 +21,7 @@ try{
   await page.goto(base);await page.locator('#viewport canvas').waitFor({timeout:20000});
   await page.waitForTimeout(1700);
   assert.equal(await page.locator('.part-card').count(),120,'El catálogo debe mostrar 120 componentes disponibles');
-  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V7 listo'),true);
+  assert.equal((await page.locator('#status').innerText()).includes('Editor 3D V8 listo'),true);
   await page.waitForTimeout(600);
   assert.ok(await page.locator('.part-card[data-part-type]').count()===120,'Cada tarjeta debe ofrecer identificador');
   await page.screenshot({path:'qa-screenshots/desktop.png'});
