@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {PREMIUM_PARTS,makePremiumModel,enrichLegacyModel} from './premium-models.js';
+import {TRAIN_PARTS,makeTrainModel} from './train-models.js';
 
 // Biblioteca geométrica original de Trazo Técnico. Unidades en milímetros.
 // Los modelos son representaciones CAD conceptuales parametrizables, no piezas certificadas.
@@ -52,10 +53,11 @@ export const CATALOG=[
  P('shaft','Eje mecánico','Equipos','═','Eje macizo',{length:1200,diameter:95}),
  P('rotor','Rotor 10 discos','Equipos','≡','Eje y discos',{length:1280,shaft:80,disc:350,discs:10}),
  P('pump','Bomba centrífuga','Equipos','⬟','Voluta, bocas y bancada',{length:490,width:300,height:330}),
- ...PREMIUM_PARTS
+ ...PREMIUM_PARTS,
+ ...TRAIN_PARTS
 ];
-export const DIMENSION_NAMES={length:'Longitud',diameter:'Diámetro exterior',wall:'Espesor de pared',radius:'Radio al eje',branch:'Longitud ramal',branchDiameter:'Ø ramal',smallDiameter:'Ø menor',insulation:'Aislamiento',flange:'Ø brida',bore:'Diámetro interior',thickness:'Espesor',bolts:'Número de pernos',boltHole:'Ø agujero perno',pitch:'Círculo de pernos',neck:'Longitud del cuello',width:'Ancho / separación',height:'Altura',rod:'Ø varilla',head:'Ancho cabeza',depth:'Fondo',plate:'Espesor de placa',hole:'Ø agujero',holes:'Ø agujero',strap:'Ancho banda',shaft:'Ø eje',disc:'Ø disco',discs:'Número de discos',lining:'Espesor revestimiento',outerWall:'Espesor camisa externa',socket:'Longitud receptáculo',segments:'Segmentos',convolutions:'Ondulaciones del fuelle'};
-export const INTEGER_DIMS=new Set(['bolts','discs','segments','convolutions']);
+export const DIMENSION_NAMES={length:'Longitud',diameter:'Diámetro exterior',wall:'Espesor de pared',radius:'Radio al eje',branch:'Longitud ramal',branchDiameter:'Ø ramal',smallDiameter:'Ø menor',insulation:'Aislamiento',flange:'Ø brida',bore:'Diámetro interior',thickness:'Espesor',bolts:'Número de pernos',boltHole:'Ø agujero perno',pitch:'Círculo de pernos',neck:'Longitud del cuello',width:'Ancho / separación',height:'Altura',rod:'Ø varilla',head:'Ancho cabeza',depth:'Fondo',plate:'Espesor de placa',hole:'Ø agujero',holes:'Ø agujero',strap:'Ancho banda',shaft:'Ø eje',disc:'Ø disco',discs:'Número de discos',lining:'Espesor revestimiento',outerWall:'Espesor camisa externa',socket:'Longitud receptáculo',segments:'Segmentos',convolutions:'Ondulaciones del fuelle',stages:'Número de etapas',blades:'Álabes',pads:'Zapatas'};
+export const INTEGER_DIMS=new Set(['bolts','discs','segments','convolutions','stages','blades','pads']);
 export const PIPE_SIZES=[
  {nps:'1/8',dn:6,od:10.29,s40:1.73,s80:2.41},{nps:'1/4',dn:8,od:13.72,s40:2.24,s80:3.02},{nps:'3/8',dn:10,od:17.15,s40:2.31,s80:3.20},
  {nps:'1/2',dn:15,od:21.34,s40:2.77,s80:3.73},{nps:'3/4',dn:20,od:26.67,s40:2.87,s80:3.91},{nps:'1',dn:25,od:33.4,s40:3.38,s80:4.55},
@@ -194,7 +196,7 @@ export function makePart(data){const def=partDefinition(data.type);if(!def)throw
  case 'shaft':cyl(group,m,D/2,L,0,0,0,'x');break;
  case 'rotor':{cyl(group,M.steel,d.shaft/2,L,0,0,0,'x');const N=Math.round(d.discs);for(let i=0;i<N;i++){const x=-L*.43+i*L*.86/Math.max(1,N-1);cyl(group,m,d.disc/2,Math.max(12,L/N*.20),x,0,0,'x')}break}
  case 'pump':box(group,M.dark,L,d.height*.14,d.width,0,-d.height*.43,0);cyl(group,m,d.height*.30,L*.45,0,d.height*.06,0,'x');cyl(group,M.steel,d.height*.2,L*.10,-L*.27,d.height*.06,0,'x');cyl(group,m,d.height*.22,L*.17,L*.26,d.height*.1,0,'x');cyl(group,M.steel,d.height*.14,38,-L*.08,d.height*.43,0);break;
- default:if(!makePremiumModel(data.type,group,d,data.color))box(group,m,L,50,50);
+ default:if(!makePremiumModel(data.type,group,d,data.color)&&!makeTrainModel(data.type,group,d,data.color,data))box(group,m,L,50,50);
  }
  enrichLegacyModel(data.type,group,d,data.color);
  group.userData.parametric=true;return group;
