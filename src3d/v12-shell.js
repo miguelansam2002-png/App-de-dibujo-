@@ -40,7 +40,7 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  }
  function setFavorite(type){favorites=favorites.includes(type)?favorites.filter(x=>x!==type):[type,...favorites];writeArray(favoritesKey,favorites);render()}
  function renderCards(target,items,addLabel='Usar en diseño'){
- for(const part of items){const card=h('article','v12-model-card');const preview=h('div','part-icon v12-model-preview',part.icon||'◇');const title=h('strong','',part.label);const hint=h('p','',part.hint||'Modelo conceptual editable');
+ for(const part of items){const card=h('article','part-card v12-model-card');const preview=h('div','part-icon v12-model-preview',part.icon||'◇');const title=h('strong','',part.label);const hint=h('p','',part.hint||'Modelo conceptual editable');
  const label=h('span','v12-model-category',part.category);const actions=h('div','v12-model-actions');
  const fav=button('v12-fav'+(favorites.includes(part.type)?' chosen':''),favorites.includes(part.type)?'★':'☆',()=>setFavorite(part.type));fav.setAttribute('aria-label','Alternar favorito '+part.label);
  const open=button('v12-model-add','+ '+addLabel,()=>pick(part.type));actions.append(fav,open);
