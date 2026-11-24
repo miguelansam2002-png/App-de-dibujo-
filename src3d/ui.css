@@ -47,3 +47,45 @@
 @media(max-width:850px) and (orientation:landscape){.panel{top:61px;bottom:84px}.part-card{min-height:92px}.touch-dock{height:48px}.workspace{height:calc(100dvh - 135px)}}
 .rotate-shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.rotate-shortcuts button{padding:9px 1px;border:1px solid #c4dce2;background:#e6f1f3;color:#267381;border-radius:7px;font-size:10px;font-weight:750;min-height:36px}.rotate-shortcuts button:hover{border-color:#5badb3;background:#d1e9ea}
 .viewport canvas{cursor:crosshair}.hud-actions button:disabled,.top-actions button:disabled{opacity:.45;cursor:not-allowed}
+/* V4 · ensamblaje CAD táctil */
+:root{--accent:#55c8cf;--accent-strong:#17b4c6;--join-bg:#0c2939;--join-border:#2a6978}
+.join-action,.hud-actions #joinBtn{width:auto;min-width:76px;font-size:12px;font-weight:800;letter-spacing:.15px;color:#bffaff;background:#124759d9;border-color:#307c8c;padding:0 12px}
+.join-action:hover,.join-action.armed,.join-primary.armed{background:#087b83!important;color:#fff!important;border-color:#66e6d3!important}
+.join-panel{background:linear-gradient(145deg,#12344b,#0c2335);border:1px solid #28566b;border-radius:13px;padding:14px;margin:8px 0 18px;box-shadow:0 7px 18px #06122166}
+.join-heading{display:flex;justify-content:space-between;align-items:center;gap:7px;color:#a5f6ed;font-size:10px;font-weight:850;letter-spacing:1px}
+.join-badge{color:#82bfce;background:#133c4f;padding:6px 7px;border-radius:8px;font-size:8px;letter-spacing:0}
+.join-description{font-size:11px;line-height:1.6;color:#b8d6e4;margin:11px 0}
+.join-actions{display:flex;gap:7px;margin-bottom:12px}
+.join-actions button{flex:1;min-height:40px;border:1px solid #376477;border-radius:9px;color:#d5edf7;background:#19374b;font-size:11px;font-weight:760}
+.join-actions .join-primary,.join-secondary{background:#087c8a!important;border:1px solid #30b9bf!important;color:white!important;font-weight:800}
+.join-secondary{width:100%;min-height:42px;border-radius:8px;font-size:11px;margin-top:3px;padding:10px}
+.join-secondary:disabled,.join-actions button:disabled{opacity:.38;cursor:not-allowed}
+.join-divider{display:flex;align-items:center;gap:8px;margin:11px 0;color:#83aebe;font-size:10px}
+.join-divider:before,.join-divider:after{content:"";height:1px;background:#2e5265;flex:1}
+.join-panel .field{margin:7px 0 12px}
+.join-panel select{appearance:auto;min-width:0;width:100%;border:1px solid #35576c;border-radius:8px;background:#17374c;color:#f1fcff;padding:10px 7px;font-size:11px}
+.join-ports{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.joint-status{display:block;font-size:10px;line-height:1.5;color:#9fd4c9;margin:9px 0 0}
+.auto-join-option{display:flex;gap:12px;align-items:flex-start;background:#123449;border:1px solid #286173;border-radius:11px;margin-bottom:13px;padding:11px 10px;cursor:pointer}
+.auto-join-option input{width:18px;height:18px;margin:0;accent-color:#2bc6c3;flex:0 0 18px}
+.auto-join-option b,.auto-join-option small{display:block}
+.auto-join-option b{color:#c0f5ee;font-size:12px;margin-bottom:3px}
+.auto-join-option small{font-size:10px;line-height:1.45;color:#94b4c3}
+#dockJoin{color:#87ebdc}
+#dockJoin.active{background:#11475c}
+.viewport-hud .hud-actions{flex-wrap:wrap;justify-content:flex-end}
+.view-controls{box-shadow:0 8px 32px #030b19aa}
+.part-card:active{transform:scale(.975);border-color:#58dccf}
+.part-card:focus-visible,.join-actions button:focus-visible,.join-secondary:focus-visible{outline:2px solid #6ce3d1;outline-offset:2px}
+@media(max-width:1190px){.join-panel{padding:10px}.join-badge{display:none}}
+@media(max-width:850px){
+ .viewport-hud{left:10px;right:10px;top:10px}
+ .hud-actions #joinBtn{min-width:59px;font-size:11px;padding:0 7px}
+ .join-panel{margin-top:2px;margin-bottom:14px;padding:13px}
+ .join-actions button{min-height:45px;font-size:12px}
+ .join-secondary{min-height:44px}
+ .join-panel select{min-height:41px;font-size:12px}
+ .viewport-hint{max-width:calc(100vw - 24px);line-height:1.4;bottom:17px;font-size:9px}
+ .touch-dock button{min-width:54px}
+}
+@media(max-width:440px){.hud-actions #joinBtn{min-width:49px}.hud-actions{gap:3px}.mode-pill{display:none}.viewport-hint{font-size:8px}}
