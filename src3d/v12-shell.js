@@ -11,7 +11,7 @@ const favoritesKey='trazo-v12-favorites';
 function readArray(key){try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,20):[]}catch{return []}}
 function writeArray(key,data){try{localStorage.setItem(key,JSON.stringify(data.slice(0,20)))}catch{}}
 const intro=[['01','Selecciona una pieza','Busca en la biblioteca, elige el componente y pulsa Añadir.'],['02','Ajusta lo necesario','Selecciona el componente para editar medidas, material y posición.'],['03','Ensambla fácilmente','Usa Unir y toca la pieza destino para alinear conectores compatibles.'],['04','Guarda tu trabajo','Exporta el proyecto JSON y usa los puntos de recuperación.']];
-export function createV12Shell({catalog,makePart,releasePart,standardPart,addPart,studio,notify,fitScene,renderScene,setEditorActive}){
+export function createV12Shell({catalog,makePart,releasePart,standardPart,addPart,studio,notify,fitScene,renderScene,ensureViewport,setEditorActive}){
  let page='home',mode='all',search='',category='Todos',favorites=readArray(favoritesKey),recent=readArray(RECENT_KEY),firstDesign=true;
  const home=document.createElement('div');home.id='v12-shell';home.className='v12-shell';document.body.append(home);
  const quick=h('div','v12-quick');quick.id='v12-quick';document.body.append(quick);
@@ -22,10 +22,10 @@ export function createV12Shell({catalog,makePart,releasePart,standardPart,addPar
  document.querySelector('.topbar')?.prepend(nav);
  const getPart=type=>catalog.find(p=>p.type===type);
  function markRecent(type){recent=[type,...recent.filter(x=>x!==type)].slice(0,12);writeArray(RECENT_KEY,recent)}
- function pick(type){if(!getPart(type))return;markRecent(type);go('design');requestAnimationFrame(()=>requestAnimationFrame(()=>{addPart(type);fitScene?.();renderScene?.();notify('Pieza añadida y visible en el diseño.')}))}
+ function pick(type){if(!getPart(type))return;markRecent(type);go('design');requestAnimationFrame(()=>requestAnimationFrame(()=>{addPart(type);ensureViewport?.();notify('Pieza añadida y visible en el diseño.')}))}
  function go(next){if(next==='design')pauseCatalogPreviews();else if(typeof palette!=='undefined')palette.hidden=true;page=next;setEditorActive?.(next==='design');document.body.classList.toggle('v12-design',next==='design');home.classList.toggle('v12-off',next==='design');
    nav.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.page===next);b.setAttribute('aria-current',b.dataset.page===next?'page':'false')});
-   if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};requestAnimationFrame(()=>requestAnimationFrame(()=>{fitScene?.();renderScene?.()}));return}
+   if(next==='design'){home.replaceChildren();if(firstDesign){firstDesign=false;setTimeout(()=>notify('Diseño listo: pulsa + Añadir pieza para comenzar'),350)}try{window.dispatchEvent(new Event('resize'))}catch{};requestAnimationFrame(()=>requestAnimationFrame(()=>{ensureViewport?.();renderScene?.()}));return}
    document.body.classList.remove('v12-parts','v12-inspector');studio?.close();render();
  }
  const heroBtn=(icon,title,desc,onClick,primary=false)=>{const b=button('v12-path'+(primary?' primary':''),'',onClick);b.append(h('div','v12-path-icon',icon),h('strong','',title),h('p','',desc),h('span','v12-path-cta','Abrir →'));return b};
